@@ -4,7 +4,7 @@ from starlette.responses import JSONResponse
 
 from constants.error_code import ErrorCode
 from schemas.api_schema import ApiResponse
-from exception.app_exception import AppException
+from exceptions.app_exception import AppException
 
 
 def register_exception_handler(app: FastAPI):
