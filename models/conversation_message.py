@@ -13,7 +13,7 @@ class ConversationMessage(Base, TimestampMixin):
     role = Column(String(50), nullable=False)  # user, assistant, system
     content = Column(Text, nullable=False)
     
-    agent_name = Column(String(50))  # orchestrator, kr_agent, psych_agent, synth_agent
+    agent_name = Column(String(50))  # orchestrator, kr_agent, psych_agent, synth_agent.md
     latency_ms = Column(Integer)
     token_count = Column(Integer)
     
