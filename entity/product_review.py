@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, String, Text, Boolean, DateTime, ForeignKey, Index, TINYINT
+from sqlalchemy import Column, BigInteger, String, Text, Boolean, DateTime, ForeignKey, Index
 
 from entity.base_model import Base, TimestampMixin
 
@@ -12,7 +12,7 @@ class ProductReview(Base, TimestampMixin):
     user_id = Column(BigInteger, ForeignKey('Users.id', ondelete='SET NULL'))
     order_item_id = Column(BigInteger, ForeignKey('OrderItems.id'))
     
-    rating = Column(TINYINT, nullable=False)
+    rating = Column(Boolean, nullable=False)
     title = Column(String(255))
     body = Column(Text)
     is_verified_purchase = Column(Boolean, default=False)

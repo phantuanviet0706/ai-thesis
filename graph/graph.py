@@ -20,9 +20,9 @@ from agents.kr_agent import kr_agent_node
 from agents.orchestrator import orchestrator_node
 from agents.psych_agent import psych_agent_node
 from agents.synth_agent import synth_agent_node
-from core.config import settings
 from graph.router import conditional_router
 from graph.state import ConversationState
+from infrastructure.redis_client import redis_client
 
 
 def _error_handler_node(state: ConversationState) -> dict:
@@ -78,12 +78,9 @@ def _build_graph() -> StateGraph:
 
 
 def _build_redis_checkpointer() -> RedisSaver:
-    redis_url = (
-        f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
-        if settings.REDIS_PASSWORD
-        else f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/0"
-    )
-    return RedisSaver.from_conn_string(redis_url)
+    saver = RedisSaver(conn=redis_client)
+    saver.setup()
+    return saver
 
 
 def compile_graph():

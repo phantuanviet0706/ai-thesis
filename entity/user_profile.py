@@ -1,5 +1,4 @@
-from datetime import date
-from sqlalchemy import Column, BigInteger, String, Text, Integer, ForeignKey, JSON, Index, DECIMAL
+from sqlalchemy import Column, BigInteger, String, Text, Integer, ForeignKey, JSON, Index, DECIMAL, Date
 
 from entity.base_model import Base, TimestampMixin
 
@@ -13,7 +12,7 @@ class UserProfile(Base, TimestampMixin):
     
     display_name = Column(String(255))
     avatar_url = Column(String(500))
-    date_of_birth = Column(date)
+    date_of_birth = Column(Date)
     gender = Column(String(50))  # male, female, other
     zodiac_sign = Column(String(50), index=True)
     
