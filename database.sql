@@ -413,7 +413,7 @@ CREATE TABLE IF NOT EXISTS ConversationMessages (
     content     TEXT   NOT NULL,
 
     -- Populated for assistant messages to trace which agent produced the turn
-    agent_name  VARCHAR(50),     -- orchestrator | kr_agent | psych_agent | synth_agent
+    agent_name  VARCHAR(50),     -- orchestrator | kr_agent | psych_agent | synth_agent.md
     latency_ms  INT,
     token_count INT,
 
