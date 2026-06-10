@@ -1,7 +1,7 @@
 from datetime import date
 from sqlalchemy import Column, BigInteger, String, Text, Integer, ForeignKey, JSON, Index, DECIMAL
 
-from models.base_model import Base, TimestampMixin
+from entity.base_model import Base, TimestampMixin
 
 
 class UserProfile(Base, TimestampMixin):

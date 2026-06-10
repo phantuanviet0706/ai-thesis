@@ -1,7 +1,6 @@
 from sqlalchemy import Column, BigInteger, String, Text, DateTime, ForeignKey, Index, DECIMAL
-from sqlalchemy.sql import func
 
-from models.base_model import Base, TimestampMixin
+from entity.base_model import Base, TimestampMixin
 
 
 class Order(Base, TimestampMixin):

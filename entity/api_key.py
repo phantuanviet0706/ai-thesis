@@ -1,6 +1,6 @@
 from sqlalchemy import Column, BigInteger, String, Integer, Boolean, DateTime, ForeignKey, Index, JSON
 
-from models.base_model import Base, TimestampMixin, ActiveMixin
+from entity.base_model import Base, TimestampMixin, ActiveMixin
 
 
 class APIKey(Base, TimestampMixin, ActiveMixin):

@@ -1,8 +1,6 @@
 from sqlalchemy import Column, BigInteger, String, Text, Boolean, ForeignKey, Index
-from sqlalchemy.sql import func
-from sqlalchemy import DateTime
 
-from models.base_model import Base, TimestampMixin
+from entity.base_model import Base, TimestampMixin
 
 
 class SystemConfig(Base, TimestampMixin):

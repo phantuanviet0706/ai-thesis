@@ -1,6 +1,6 @@
 from sqlalchemy import Column, BigInteger, String, DateTime, ForeignKey, Index
 
-from models.base_model import Base, TimestampMixin
+from entity.base_model import Base, TimestampMixin
 
 
 class Cart(Base, TimestampMixin):

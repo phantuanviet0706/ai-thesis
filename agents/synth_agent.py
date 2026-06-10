@@ -11,7 +11,7 @@ Response structure follows AIDA marketing model:
 """
 
 from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from core.config import settings
 from entity.product_doc import ProductDoc
@@ -101,6 +101,7 @@ def synth_agent_node(state: ConversationState) -> dict:
     ])
 
     return {
+        "messages": [AIMessage(content=response.content)],
         "final_response": response.content,
         "error_state": None,
     }

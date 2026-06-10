@@ -1,6 +1,6 @@
 from sqlalchemy import Column, BigInteger, String, Integer, Boolean, ForeignKey, Index
 
-from models.base_model import Base, TimestampMixin
+from entity.base_model import Base, TimestampMixin
 
 
 class ProductImage(Base, TimestampMixin):

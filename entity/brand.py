@@ -1,5 +1,5 @@
 from sqlalchemy import Column, BigInteger, String, Text, Boolean, Index
-from models.base_model import Base, TimestampMixin, ActiveMixin
+from entity.base_model import Base, TimestampMixin, ActiveMixin
 
 
 class Brand(Base, TimestampMixin, ActiveMixin):

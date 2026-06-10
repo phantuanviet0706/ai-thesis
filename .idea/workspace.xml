@@ -5,20 +5,45 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8ba4c288-c751-43f1-b8dc-12c4c41593f0" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/resources/prompt/kr_agent.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/prompt/orchestrator_agent.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/prompt/psych_agent.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/prompt/synth_agent.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/utils/helper.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/common/model_type.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/base_llm_provider.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/huggingface_local_provider.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/huggingface_provider.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/model_factory.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/ollama_provider.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/open_ai_provider.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/thesis.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/thesis.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/api_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/api_router.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database.sql" beforeDir="false" afterPath="$PROJECT_DIR$/database.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infrastructure/redis_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/infrastructure/redis_client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/conversation_message.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/conversation_message.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/synth_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/synth_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/controller/chat_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/controller/chat_controller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graph/graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/graph/graph.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/agent_performance_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/agent_performance_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/api_key.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/api_key.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/audit_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/audit_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/base_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/base_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/brand.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/brand.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/cart.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/cart.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/cart_item.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/cart_item.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/category.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/category.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/conversation_message.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/conversation_message.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/conversation_session.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/conversation_session.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/order.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/order.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/order_item.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/order_item.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/payment.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/payment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/product.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/product.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/product_image.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/product_image.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/product_review.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/product_review.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/product_tag.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/product_tag.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/psych_state_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/psych_state_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/sample_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/sample_model.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/system_config.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/system_config.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/tag.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/tag.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/user.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/user_address.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/user_address.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/user_profile.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/user_profile.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -76,6 +101,7 @@
       <recent name="D:\ext_project\ai-thesis\documents" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\ext_project\ai-thesis\entity" />
       <recent name="D:\ext_project\ai-thesis\resources\sample" />
       <recent name="D:\ext_project\ai-thesis\api\v1" />
       <recent name="D:\project\learning\thesis\document" />

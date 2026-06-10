@@ -1,7 +1,7 @@
 from sqlalchemy import Column, BigInteger, String, Text, Boolean, Integer, ForeignKey, Index
 from sqlalchemy.orm import relationship
 
-from models.base_model import Base, TimestampMixin, ActiveMixin
+from entity.base_model import Base, TimestampMixin, ActiveMixin
 
 
 class Category(Base, TimestampMixin, ActiveMixin):

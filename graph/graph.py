@@ -12,7 +12,7 @@ Graph topology (thesis §3.3.2 + Figure):
 Checkpointing: Redis checkpointer stores state per thread_id:checkpoint_id with TTL=3600s.
 """
 
-from langchain_core.messages import AIMessage
+from langchain_core.messages import AIMessage  # used in _error_handler_node
 from langgraph.checkpoint.redis import RedisSaver
 from langgraph.graph import END, START, StateGraph
 
@@ -28,12 +28,14 @@ from graph.state import ConversationState
 def _error_handler_node(state: ConversationState) -> dict:
     """Graceful degradation — returns a fallback response when any agent fails."""
     error_msg = state.get("error_state", "Đã xảy ra lỗi không xác định")
+    fallback = (
+        "Xin lỗi, hệ thống đang gặp sự cố tạm thời. "
+        "Bạn vui lòng thử lại sau ít phút hoặc liên hệ trực tiếp với nhân viên tư vấn. "
+        f"[Debug: {error_msg}]"
+    )
     return {
-        "final_response": (
-            "Xin lỗi, hệ thống đang gặp sự cố tạm thời. "
-            "Bạn vui lòng thử lại sau ít phút hoặc liên hệ trực tiếp với nhân viên tư vấn. "
-            f"[Debug: {error_msg}]"
-        ),
+        "messages": [AIMessage(content=fallback)],
+        "final_response": fallback,
         "error_state": None,
     }
 

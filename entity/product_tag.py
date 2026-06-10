@@ -1,6 +1,6 @@
 from sqlalchemy import Column, BigInteger, ForeignKey
 
-from models.base_model import Base
+from entity.base_model import Base
 
 
 class ProductTag(Base):

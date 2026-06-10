@@ -1,7 +1,7 @@
 from sqlalchemy import Column, BigInteger, Integer, DateTime, ForeignKey, UniqueConstraint, Index
 from sqlalchemy.sql import func
 
-from models.base_model import Base
+from entity.base_model import Base
 
 
 class CartItem(Base):

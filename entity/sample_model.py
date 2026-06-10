@@ -1,6 +1,6 @@
 from sqlalchemy import Column, BigInteger, String, Text, Boolean
 
-from models.base_model import Base, TimestampMixin, ActiveMixin, SystemScopedMixin
+from entity.base_model import Base, TimestampMixin, ActiveMixin, SystemScopedMixin
 
 
 class SampleModel(Base, TimestampMixin, ActiveMixin, SystemScopedMixin):

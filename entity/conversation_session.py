@@ -1,7 +1,7 @@
 from sqlalchemy import Column, BigInteger, String, Integer, DateTime, ForeignKey, Index
 from sqlalchemy.sql import func
 
-from models.base_model import Base
+from entity.base_model import Base
 
 
 class ConversationSession(Base):

@@ -1,6 +1,6 @@
-from sqlalchemy import Column, BigInteger, String, Text, Boolean, Integer, DateTime, ForeignKey, Index, TINYINT
+from sqlalchemy import Column, BigInteger, String, Text, Boolean, DateTime, ForeignKey, Index, TINYINT
 
-from models.base_model import Base, TimestampMixin
+from entity.base_model import Base, TimestampMixin
 
 
 class ProductReview(Base, TimestampMixin):
