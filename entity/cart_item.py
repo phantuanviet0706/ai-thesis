@@ -13,7 +13,7 @@ class CartItem(Base):
     product_id = Column(BigInteger, ForeignKey('Products.id', ondelete='CASCADE'), nullable=False)
     quantity = Column(Integer, default=1, nullable=False)
 
-    added_at = Column(DateTime(6), default=func.now(), nullable=False)
+    added_at = Column(DateTime, default=func.now(), nullable=False)
 
     __table_args__ = (
         UniqueConstraint('cart_id', 'product_id', name='uq_cart_product'),

@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class ModelType(Enum):
     HF_ENDPOINT = 'hf_endpoint'
     HF_API = 'hf_api'

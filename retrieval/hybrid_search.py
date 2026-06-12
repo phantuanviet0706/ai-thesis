@@ -1,9 +1,10 @@
+import time
 from typing import Any
 
 import numpy as np
 from rank_bm25 import BM25Okapi
 
-from common.constants import (
+from constants.constants import (
     LAMBDA_DENSE,
     LAMBDA_SPARSE,
     LAMBDA_META,
@@ -11,18 +12,31 @@ from common.constants import (
     TOP_K_INITIAL,
     TOP_K_FINAL,
 )
+from core.logger import custom_logger
+from database.vector_db_manager import VectorDBManager
 from entity.product_doc import ProductDoc
-from retrieval.chromadb_client import get_all_collections
 from retrieval.embeddings import embed_query
 
 
 def _cosine_similarity(a: list[float], b: list[float]) -> float:
+    """
+    @desc Tính độ tương đồng cosine giữa hai vector — trả về 0.0 nếu một trong hai vector có độ dài bằng 0
+    @params a (list[float]): Vector thứ nhất
+    @params b (list[float]): Vector thứ hai
+    @return float: Giá trị độ tương đồng cosine trong khoảng [-1.0, 1.0]
+    """
     va, vb = np.array(a), np.array(b)
     denom = np.linalg.norm(va) * np.linalg.norm(vb)
     return float(np.dot(va, vb) / denom) if denom > 0 else 0.0
 
 
 def _bm25_scores(query_tokens: list[str], corpus: list[list[str]]) -> list[float]:
+    """
+    @desc Tính điểm BM25 chuẩn hóa cho từng tài liệu trong corpus so với câu truy vấn đã được token hóa
+    @params query_tokens (list[str]): Danh sách token của câu truy vấn
+    @params corpus (list[list[str]]): Danh sách tài liệu, mỗi tài liệu là danh sách token
+    @return list[float]: Danh sách điểm BM25 đã chuẩn hóa về khoảng [0.0, 1.0]
+    """
     if not corpus:
         return []
     bm25 = BM25Okapi(corpus)
@@ -32,7 +46,12 @@ def _bm25_scores(query_tokens: list[str], corpus: list[list[str]]) -> list[float
 
 
 def _meta_score(metadata: dict[str, Any], filters: dict[str, Any]) -> float:
-    """Binary: 1.0 if all hard filters match, 0.0 otherwise."""
+    """
+    @desc Tính điểm lọc metadata nhị phân — trả về 1.0 nếu tất cả điều kiện lọc được thỏa mãn, ngược lại trả về 0.0
+    @params metadata (dict[str, Any]): Metadata của tài liệu cần kiểm tra
+    @params filters (dict[str, Any]): Bộ điều kiện lọc cứng cần kiểm tra, hỗ trợ toán tử $eq, $lte, $gte
+    @return float: 1.0 nếu tất cả điều kiện thỏa mãn, 0.0 nếu có ít nhất một điều kiện không thỏa mãn
+    """
     for key, condition in filters.items():
         value = metadata.get(key)
         if value is None:
@@ -56,8 +75,11 @@ def _mmr_select(
     k: int,
 ) -> list[ProductDoc]:
     """
-    Maximal Marginal Relevance — balances relevance and diversity.
-    Formula from thesis §3.2.2 Stage 3.
+    @desc Chọn k tài liệu tốt nhất theo thuật toán Maximal Marginal Relevance (MMR) — cân bằng giữa độ liên quan và tính đa dạng
+    @params query_vec (list[float]): Vector embedding của câu truy vấn
+    @params candidates (list[tuple[ProductDoc, list[float]]]): Danh sách ứng viên gồm cặp (tài liệu, vector embedding)
+    @params k (int): Số lượng tài liệu cần chọn
+    @return list[ProductDoc]: Danh sách k tài liệu được chọn theo tiêu chí MMR
     """
     selected: list[ProductDoc] = []
     selected_vecs: list[list[float]] = []
@@ -87,22 +109,29 @@ def hybrid_search(
     k: int = TOP_K_FINAL,
 ) -> list[ProductDoc]:
     """
-    Three-stage hybrid retrieval for the KR Agent.
-
-    Stage 1: Dense (cosine) + Sparse (BM25) + Meta filtering across all 3 collections.
-    Stage 2: Composite score = 0.50·dense + 0.30·sparse + 0.20·meta
-    Stage 3: MMR re-ranking to select diverse top-k results.
+    @desc Thực hiện tìm kiếm lai ba giai đoạn cho KR Agent — kết hợp tìm kiếm dày đặc (dense), thưa (BM25) và lọc metadata, sau đó xếp hạng lại bằng MMR
+    @params query (str): Câu truy vấn tìm kiếm của người dùng
+    @params metadata_filters (dict[str, Any] | None): Bộ điều kiện lọc metadata tùy chọn
+    @params k (int): Số lượng sản phẩm tối đa trả về sau khi xếp hạng MMR
+    @return list[ProductDoc]: Danh sách sản phẩm phù hợp nhất sau khi qua toàn bộ pipeline tìm kiếm
     """
+    t0 = time.perf_counter()
+    filters = metadata_filters or {}
+    custom_logger.info(
+        f"[HybridSearch] start | k={k} | filters={list(filters.keys())} | "
+        f"query_preview='{query[:80]}'"
+    )
+
     query_vec = embed_query(query)
     query_tokens = query.lower().split()
-    filters = metadata_filters or {}
 
     raw_candidates: list[tuple[ProductDoc, list[float], float]] = []
 
-    for collection_name, collection in get_all_collections().items():
+    for collection_name, collection in VectorDBManager().get_all_collections().items():
+        col_count = collection.count() or 1
         results = collection.query(
             query_embeddings=[query_vec],
-            n_results=min(TOP_K_INITIAL, collection.count() or 1),
+            n_results=min(TOP_K_INITIAL, col_count),
             include=["documents", "metadatas", "embeddings", "distances"],
         )
 
@@ -112,9 +141,9 @@ def hybrid_search(
         distances_list = results.get("distances", [[]])[0]
 
         if not docs_list:
+            custom_logger.debug(f"[HybridSearch] collection='{collection_name}' → 0 results")
             continue
 
-        # BM25 on this collection's corpus
         corpus_tokens = [d.lower().split() for d in docs_list]
         sparse_scores = _bm25_scores(query_tokens, corpus_tokens)
 
@@ -149,9 +178,19 @@ def hybrid_search(
             )
             raw_candidates.append((product, doc_vec, composite))
 
-    # Sort by composite score descending, take top TOP_K_INITIAL
+        custom_logger.debug(
+            f"[HybridSearch] collection='{collection_name}' → {len(docs_list)} hits"
+        )
+
+    custom_logger.info(f"[HybridSearch] raw_candidates={len(raw_candidates)} across 3 collections")
+
     raw_candidates.sort(key=lambda x: x[2], reverse=True)
     top_candidates = [(doc, vec) for doc, vec, _ in raw_candidates[:TOP_K_INITIAL]]
 
-    # MMR for diversity
-    return _mmr_select(query_vec, top_candidates, k=k)
+    results_final = _mmr_select(query_vec, top_candidates, k=k)
+
+    latency = (time.perf_counter() - t0) * 1000
+    custom_logger.info(
+        f"[HybridSearch] complete | returned={len(results_final)} | {latency:.0f}ms"
+    )
+    return results_final

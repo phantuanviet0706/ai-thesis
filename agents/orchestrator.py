@@ -11,17 +11,24 @@ Action space A = {kr_agent, psych_agent, synth_agent.md, END}
 """
 
 import json
+import time
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
 
 from core.config import settings
+from core.logger import custom_logger
 from graph.state import ConversationState
 from utils.helper import read_file_contents
 
 _SYSTEM_PROMPT = read_file_contents("resources/prompt/orchestrator_agent.md")
 
+
 def _build_orchestrator_llm() -> ChatAnthropic:
+    """
+    @desc Khởi tạo LLM chính (Sonnet) dùng cho Orchestrator Agent
+    @return ChatAnthropic: Instance ChatAnthropic với temperature=0 và max_tokens=512
+    """
     return ChatAnthropic(
         model=settings.ANTHROPIC_MODEL_PRIMARY,
         api_key=settings.ANTHROPIC_API_KEY,
@@ -32,16 +39,19 @@ def _build_orchestrator_llm() -> ChatAnthropic:
 
 def orchestrator_node(state: ConversationState) -> dict:
     """
-    LangGraph node function for the Orchestrator Agent.
-    Returns a state delta with: next_node, user_intent, iteration_count (+1).
+    @desc Node LangGraph của Orchestrator Agent — phân tích ý định người dùng và quyết định agent tiếp theo
+    @params state (ConversationState): Trạng thái hội thoại chứa lịch sử tin nhắn và kết quả từ các agent
+    @return dict: State delta gồm next_node, user_intent và iteration_count tăng thêm 1
     """
+    t0 = time.perf_counter()
+    iteration = state.get("iteration_count", 0)
+    custom_logger.info(f"[Orchestrator] start | iter={iteration}")
+
     llm = _build_orchestrator_llm()
 
-    # Build a compact state summary to feed into the prompt
     has_products = bool(state.get("retrieved_products"))
     has_psych = bool(state.get("psych_state"))
     has_response = bool(state.get("final_response"))
-    iteration = state.get("iteration_count", 0)
 
     state_summary = (
         f"retrieved_products: {'có (' + str(len(state['retrieved_products'])) + ' sản phẩm)' if has_products else 'chưa có'}\n"
@@ -68,17 +78,28 @@ def orchestrator_node(state: ConversationState) -> dict:
         HumanMessage(content=user_prompt),
     ])
 
+    next_node = "END"
+    user_intent = ""
     try:
         parsed = json.loads(response.content)
         next_node = parsed.get("next_node", "END")
         user_intent = parsed.get("user_intent", "")
     except (json.JSONDecodeError, AttributeError):
-        next_node = "kr_agent" if not has_products else ("psych_agent" if not has_psych else "synth_agent.md")
+        next_node = "kr_agent" if not has_products else ("psych_agent" if not has_psych else "synth_agent")
         user_intent = ""
+        custom_logger.warning(
+            f"[Orchestrator] JSON parse failed, fallback routing → {next_node} | iter={iteration}"
+        )
+
+    latency = (time.perf_counter() - t0) * 1000
+    custom_logger.info(
+        f"[Orchestrator] complete | next={next_node} | "
+        f"intent='{user_intent[:60]}' | {latency:.0f}ms | iter={iteration}"
+    )
 
     return {
         "next_node": next_node,
         "user_intent": user_intent,
-        "iteration_count": 1,  # add reducer increments total
+        "iteration_count": 1,
         "error_state": None,
     }

@@ -1,9 +1,9 @@
 from sqlalchemy import Column, BigInteger, String, Text, Boolean
 
-from entity.base_model import Base, TimestampMixin, ActiveMixin, SystemScopedMixin
+from entity.base_model import Base, TimestampMixin, ActiveMixin
 
 
-class SampleModel(Base, TimestampMixin, ActiveMixin, SystemScopedMixin):
+class SampleModel(Base, TimestampMixin, ActiveMixin):
     __tablename__ = 'SampleModels'
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)

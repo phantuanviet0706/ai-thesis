@@ -15,7 +15,7 @@ class Payment(Base, TimestampMixin):
     amount = Column(DECIMAL(15, 2), nullable=False)
     status = Column(String(50), default='pending', nullable=False, index=True)  # pending, success, failed, refunded
     gateway_response = Column(JSON)
-    paid_at = Column(DateTime(6))
+    paid_at = Column(DateTime)
 
 
     __table_args__ = (

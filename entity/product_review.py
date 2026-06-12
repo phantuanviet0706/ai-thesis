@@ -17,7 +17,7 @@ class ProductReview(Base, TimestampMixin):
     body = Column(Text)
     is_verified_purchase = Column(Boolean, default=False)
     is_published = Column(Boolean, default=False, index=True)
-    moderated_at = Column(DateTime(6))
+    moderated_at = Column(DateTime)
     embedding_status = Column(String(50), default='pending', index=True)  # pending, indexed, failed
     
     __table_args__ = (

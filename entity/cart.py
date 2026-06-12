@@ -10,7 +10,7 @@ class Cart(Base, TimestampMixin):
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, ForeignKey('Users.id', ondelete='CASCADE'))
     session_key = Column(String(255), index=True)
-    expires_at = Column(DateTime(6), index=True)
+    expires_at = Column(DateTime, index=True)
 
     __table_args__ = (
         Index('idx_cart_user', 'user_id'),

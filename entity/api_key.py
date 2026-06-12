@@ -16,8 +16,8 @@ class APIKey(Base, TimestampMixin, ActiveMixin):
     scopes = Column(JSON)
     rate_limit_rpm = Column(Integer, default=100, nullable=False)
     is_active = Column(Boolean, default=True, index=True)
-    last_used_at = Column(DateTime(6))
-    expires_at = Column(DateTime(6))
+    last_used_at = Column(DateTime)
+    expires_at = Column(DateTime)
     
     __table_args__ = (
         Index('idx_apikey_hash', 'key_hash'),

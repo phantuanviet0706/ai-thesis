@@ -20,7 +20,7 @@ class Setting(BaseSettings):
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
 
-    # PostgreSQL (optional — not used in primary app flow)
+    # PostgreSQL (primary physical database)
     PG_HOST: str = "localhost"
     PG_PORT: int = 5432
     PG_NAME: str = "ai-chatbot"

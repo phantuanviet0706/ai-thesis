@@ -19,7 +19,7 @@ class User(Base, TimestampMixin, ActiveMixin):
     is_active = Column(Boolean, default=True, index=True)
     is_verified = Column(Boolean, default=False)
 
-    last_login_at = Column(DateTime(6))
+    last_login_at = Column(DateTime)
 
     __table_args__ = (
         Index('idx_user_email', 'email'),

@@ -9,35 +9,34 @@ expands them to related entities, enriching the semantic context fed into
 the hybrid search stage.
 """
 
+import json
 from dataclasses import dataclass, field
+from pathlib import Path
 
-# ─── In-memory entity graph ───────────────────────────────────────────────────
-# In production this would be loaded from the database or a graph store.
-# Format: entity_name → list[related_entity_names]
+from core.logger import custom_logger
 
-ENTITY_GRAPH: dict[str, list[str]] = {
-    # Occasions
-    "sinh nhật": ["nhẫn phong thủy", "vòng tay bạc", "dây chuyền vàng", "quà tặng cao cấp"],
-    "cưới": ["nhẫn cưới", "nhẫn đính hôn", "bộ trang sức cưới", "vàng 18k"],
-    "valentine": ["nhẫn tình yêu", "vòng tay đôi", "dây chuyền trái tim"],
-    "tết": ["nhẫn vàng", "trang sức vàng", "quà tặng may mắn", "phong thủy"],
-    "khai trương": ["la bàn phong thủy", "trang sức phong thủy", "mệnh hỏa", "mệnh thổ"],
-    # Categories → related products
-    "nhẫn": ["nhẫn phong thủy", "nhẫn cưới", "nhẫn đính hôn", "nhẫn vàng", "nhẫn bạc"],
-    "vòng tay": ["vòng tay bạc", "vòng tay vàng", "vòng tay phong thủy", "lắc tay"],
-    "dây chuyền": ["dây chuyền vàng", "dây chuyền bạc", "mặt dây chuyền"],
-    "bông tai": ["hoa tai vàng", "bông tai bạc", "khuyên tai"],
-    # Feng shui elements
-    "mệnh kim": ["bạc", "trắng", "vàng trắng"],
-    "mệnh mộc": ["xanh lá", "gỗ", "ngọc bích"],
-    "mệnh thủy": ["đen", "xanh dương", "bạc"],
-    "mệnh hỏa": ["đỏ", "vàng", "ruby", "đá đỏ"],
-    "mệnh thổ": ["vàng", "nâu", "đá vàng"],
-    # Price ranges
-    "giá rẻ": ["dưới 1 triệu", "bình dân", "học sinh sinh viên"],
-    "tầm trung": ["1-5 triệu", "nhân viên văn phòng"],
-    "cao cấp": ["trên 10 triệu", "luxury", "quà tặng vip"],
-}
+_GRAPH_PATH = Path(__file__).resolve().parent.parent / "resources" / "data" / "entity_graph.json"
+
+
+def _load_entity_graph() -> dict[str, list[str]]:
+    """
+    @desc Đọc và nạp đồ thị thực thể từ file JSON vào bộ nhớ — trả về dict rỗng nếu file không tồn tại hoặc bị lỗi
+    @return dict[str, list[str]]: Dictionary ánh xạ tên thực thể sang danh sách các thực thể liên quan
+    """
+    try:
+        with open(_GRAPH_PATH, encoding="utf-8") as f:
+            data: dict[str, list[str]] = json.load(f)
+        custom_logger.info(f"[GraphRAG] Entity graph loaded | nodes={len(data)} | path={_GRAPH_PATH}")
+        return data
+    except FileNotFoundError:
+        custom_logger.warning(f"[GraphRAG] entity_graph.json not found at {_GRAPH_PATH}, using empty graph")
+        return {}
+    except Exception as exc:
+        custom_logger.error(f"[GraphRAG] Failed to load entity graph: {exc}", exc_info=True)
+        return {}
+
+
+ENTITY_GRAPH: dict[str, list[str]] = _load_entity_graph()
 
 
 @dataclass
@@ -48,7 +47,11 @@ class GraphRAGContext:
 
 
 def extract_entities(query: str) -> list[str]:
-    """Keyword-based entity extraction from query (production would use NER)."""
+    """
+    @desc Trích xuất các thực thể liên quan từ câu truy vấn bằng phương pháp so khớp từ khóa với đồ thị thực thể
+    @params query (str): Câu truy vấn đầu vào của người dùng
+    @return list[str]: Danh sách các thực thể tìm thấy trong câu truy vấn
+    """
     query_lower = query.lower()
     found: list[str] = []
     for entity in ENTITY_GRAPH:
@@ -58,7 +61,12 @@ def extract_entities(query: str) -> list[str]:
 
 
 def traverse_graph(entities: list[str], hops: int = 1) -> list[str]:
-    """BFS traversal — expand each entity to its neighbors up to `hops` levels."""
+    """
+    @desc Duyệt đồ thị theo chiều rộng (BFS) để mở rộng tập thực thể ban đầu sang các thực thể lân cận trong phạm vi số bước nhảy cho trước
+    @params entities (list[str]): Danh sách thực thể gốc cần mở rộng
+    @params hops (int): Số bước nhảy tối đa trong đồ thị khi duyệt
+    @return list[str]: Danh sách tất cả các thực thể sau khi mở rộng (bao gồm cả thực thể gốc)
+    """
     visited: set[str] = set(entities)
     frontier = list(entities)
 
@@ -76,10 +84,9 @@ def traverse_graph(entities: list[str], hops: int = 1) -> list[str]:
 
 def build_graphrag_context(query: str) -> GraphRAGContext:
     """
-    Full Graph RAG pipeline:
-    1. Extract entities from query
-    2. Traverse entity graph to find related concepts
-    3. Enrich the query string with expanded context
+    @desc Thực thi toàn bộ pipeline Graph RAG: trích xuất thực thể, duyệt đồ thị và làm giàu câu truy vấn với ngữ cảnh mở rộng
+    @params query (str): Câu truy vấn gốc của người dùng
+    @return GraphRAGContext: Đối tượng chứa câu truy vấn gốc, danh sách thực thể mở rộng và câu truy vấn đã được làm giàu
     """
     entities = extract_entities(query)
     all_entities = traverse_graph(entities, hops=1)
@@ -96,5 +103,9 @@ def build_graphrag_context(query: str) -> GraphRAGContext:
 
 
 def enrich_query(query: str) -> str:
-    """Convenience wrapper — returns only the enriched query string."""
+    """
+    @desc Hàm tiện ích bọc ngoài build_graphrag_context — chỉ trả về chuỗi câu truy vấn đã được làm giàu
+    @params query (str): Câu truy vấn gốc của người dùng
+    @return str: Câu truy vấn sau khi được làm giàu bằng các thực thể mở rộng từ đồ thị
+    """
     return build_graphrag_context(query).enriched_query

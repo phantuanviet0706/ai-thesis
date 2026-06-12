@@ -6,11 +6,23 @@ from models.base_llm_provider import BaseLLMProvider
 
 class HuggingFaceLocalProvider(BaseLLMProvider):
     def __init__(self, hf_token: str):
+        """
+        @desc Khởi tạo provider HuggingFace cục bộ với token xác thực
+        @params hf_token (str): Token xác thực HuggingFace dùng để tải model
+        """
         self.hf_token = hf_token
 
     def create_model(self, model_name:str, temperature: float, **kwargs):
+        """
+        @desc Khởi tạo model ngôn ngữ cục bộ — hỗ trợ định dạng GGUF (qua LlamaCpp) và HuggingFace thông thường (qua pipeline 4-bit quantization)
+        @params model_name (str): Tên model HuggingFace hoặc đường dẫn file .gguf
+        @params temperature (float): Nhiệt độ sinh văn bản
+        @params kwargs (Any): Tham số bổ sung như max_tokens, n_ctx, max_new_tokens
+        @return LlamaCpp | HuggingFacePipeline: Đối tượng model đã khởi tạo tương ứng với định dạng đầu vào
+        """
         if model_name.endswith(".gguf"):
-            print(f"--- Đang tải GGUF Model từ: {model_name} ---")
+            from core.logger import custom_logger
+            custom_logger.info(f"[HuggingFaceLocal] Loading GGUF model from: {model_name}")
             return LlamaCpp(
                 model_path=model_name,
                 temperature=temperature,

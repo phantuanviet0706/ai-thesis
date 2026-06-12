@@ -13,10 +13,12 @@ class MySQLConfig(DatabaseSettings):
     max_overflow: int = settings.DB_MAX_OVERFLOW
 
 
-@DBManager.register_manager
 class MySQLManager:
     @staticmethod
     def init():
+        """
+        @desc Khởi tạo kết nối MySQL bằng cách đăng ký engine và session factory vào DBManager
+        """
         config = MySQLConfig()
         DBManager.register_db(
             db_key="mysql",
@@ -26,6 +28,10 @@ class MySQLManager:
 
     @staticmethod
     def get_db():
+        """
+        @desc Tạo và cung cấp phiên làm việc MySQL dùng cho dependency injection trong FastAPI
+        @return Session: Đối tượng phiên SQLAlchemy kết nối tới MySQL
+        """
         with DBManager.get_db_session("mysql") as session:
             yield session
 

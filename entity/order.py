@@ -27,10 +27,10 @@ class Order(Base, TimestampMixin):
 
     conversation_session_id = Column(BigInteger, ForeignKey('ConversationSessions.id', ondelete='SET NULL'), index=True)
 
-    confirmed_at = Column(DateTime(6))
-    shipped_at = Column(DateTime(6))
-    delivered_at = Column(DateTime(6))
-    cancelled_at = Column(DateTime(6))
+    confirmed_at = Column(DateTime)
+    shipped_at = Column(DateTime)
+    delivered_at = Column(DateTime)
+    cancelled_at = Column(DateTime)
 
     __table_args__ = (
         Index('idx_order_code', 'order_code'),

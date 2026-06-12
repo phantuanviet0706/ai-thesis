@@ -2,9 +2,13 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 def setup_logger():
+    """
+    @desc Khởi tạo và cấu hình logger toàn cục cho ứng dụng với handler ghi file theo ngày và hiển thị console
+    @return logging.Logger: Instance logger đã được cấu hình với file handler xoay vòng hàng ngày và console handler
+    """
     log_dir = BASE_DIR / "logs"
 
     if not log_dir.exists():

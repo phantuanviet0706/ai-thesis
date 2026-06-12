@@ -18,6 +18,12 @@ class PsychState(str, Enum):
 
 
 def _merge_dicts(current: dict, update: dict) -> dict:
+    """
+    @desc Gộp hai dict lại với nhau, các key trùng sẽ được ghi đè bởi giá trị từ dict mới
+    @params current (dict): Dict hiện tại trong trạng thái hội thoại
+    @params update (dict): Dict mới chứa các giá trị cần cập nhật hoặc thêm vào
+    @return dict: Dict kết quả sau khi gộp, dùng làm reducer cho trường session_metadata
+    """
     return {**current, **update}
 
 

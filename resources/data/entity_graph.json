@@ -1,0 +1,19 @@
+{
+  "sinh nhật": ["nhẫn phong thủy", "vòng tay bạc", "dây chuyền vàng", "quà tặng cao cấp"],
+  "cưới": ["nhẫn cưới", "nhẫn đính hôn", "bộ trang sức cưới", "vàng 18k"],
+  "valentine": ["nhẫn tình yêu", "vòng tay đôi", "dây chuyền trái tim"],
+  "tết": ["nhẫn vàng", "trang sức vàng", "quà tặng may mắn", "phong thủy"],
+  "khai trương": ["la bàn phong thủy", "trang sức phong thủy", "mệnh hỏa", "mệnh thổ"],
+  "nhẫn": ["nhẫn phong thủy", "nhẫn cưới", "nhẫn đính hôn", "nhẫn vàng", "nhẫn bạc"],
+  "vòng tay": ["vòng tay bạc", "vòng tay vàng", "vòng tay phong thủy", "lắc tay"],
+  "dây chuyền": ["dây chuyền vàng", "dây chuyền bạc", "mặt dây chuyền"],
+  "bông tai": ["hoa tai vàng", "bông tai bạc", "khuyên tai"],
+  "mệnh kim": ["bạc", "trắng", "vàng trắng"],
+  "mệnh mộc": ["xanh lá", "gỗ", "ngọc bích"],
+  "mệnh thủy": ["đen", "xanh dương", "bạc"],
+  "mệnh hỏa": ["đỏ", "vàng", "ruby", "đá đỏ"],
+  "mệnh thổ": ["vàng", "nâu", "đá vàng"],
+  "giá rẻ": ["dưới 1 triệu", "bình dân", "học sinh sinh viên"],
+  "tầm trung": ["1-5 triệu", "nhân viên văn phòng"],
+  "cao cấp": ["trên 10 triệu", "luxury", "quà tặng vip"]
+}

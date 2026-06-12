@@ -17,14 +17,19 @@ class PostgresConfig(DatabaseSettings):
 class PostgresManager:
     @staticmethod
     def init():
+        """
+        @desc Khởi tạo kết nối PostgreSQL bằng cách đăng ký engine và session factory cho cả khóa "default" và "postgres"
+        """
         config = PostgresConfig()
-        DBManager.register_db(
-            db_key="postgres",
-            config=config,
-        )
+        DBManager.register_db(db_key="default", config=config)
+        DBManager.register_db(db_key="postgres", config=config)
 
     @staticmethod
     def get_db():
+        """
+        @desc Tạo và cung cấp phiên làm việc PostgreSQL dùng cho dependency injection trong FastAPI
+        @return Session: Đối tượng phiên SQLAlchemy kết nối tới PostgreSQL
+        """
         with DBManager.get_db_session("postgres") as session:
             yield session
 

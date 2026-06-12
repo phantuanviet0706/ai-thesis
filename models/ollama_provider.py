@@ -4,19 +4,39 @@ from typing import Optional, Generator, Any
 
 class OllamaProvider:
     def __init__(self, base_url: str):
+        """
+        @desc Khởi tạo OllamaProvider với địa chỉ URL cơ sở của Ollama server
+        @params base_url (str): URL cơ sở của Ollama API server (ví dụ: http://localhost:11434)
+        """
         self.base_url = base_url
 
     def create_model(self, model_name: str, **params):
+        """
+        @desc Tạo và trả về một đối tượng OllamaInstance để tương tác với model được chỉ định
+        @params model_name (str): Tên model Ollama cần sử dụng
+        @params params (Any): Các tham số mặc định cho model như temperature, top_p, context_length
+        @return OllamaInstance: Đối tượng instance đã được cấu hình để gọi model Ollama
+        """
         return OllamaInstance(self.base_url, model_name, **params)
 
 class OllamaInstance:
     def __init__(self, base_url: str, model_name: str, **params):
+        """
+        @desc Khởi tạo OllamaInstance với thông tin kết nối và các tham số mặc định cho model
+        @params base_url (str): URL cơ sở của Ollama API server
+        @params model_name (str): Tên model Ollama cần sử dụng
+        @params params (Any): Các tham số mặc định cho model (temperature, top_p, v.v.)
+        """
         self.base_url = base_url
         self.model_name = model_name
         self.default_params = params
 
     def _prepare_options(self, override_params: dict) -> dict:
-        """Merge thông số mặc định với thông số override"""
+        """
+        @desc Gộp các tham số mặc định với tham số ghi đè và chuyển đổi tên key sang định dạng Ollama API
+        @params override_params (dict): Dictionary các tham số cần ghi đè so với cấu hình mặc định
+        @return dict: Dictionary các tùy chọn đã được chuẩn hóa theo định dạng Ollama API
+        """
         options = {**self.default_params, **override_params}
 
         mapping = {
@@ -41,6 +61,12 @@ class OllamaInstance:
         return ollama_options
 
     def invoke(self, prompt: str, **kwargs) -> str:
+        """
+        @desc Gọi model Ollama theo chế độ đồng bộ và trả về toàn bộ phản hồi dạng chuỗi
+        @params prompt (str): Nội dung prompt gửi đến model
+        @params kwargs (Any): Các tham số tùy chọn ghi đè cấu hình mặc định
+        @return str: Chuỗi phản hồi đầy đủ từ model
+        """
         url = f"{self.base_url}/api/generate"
         payload = {
             "model": self.model_name,
@@ -55,7 +81,12 @@ class OllamaInstance:
         return response.json().get("response", "")
 
     def stream(self, prompt: str, **kwargs) -> Generator[Any, None, None]:
-        """Gọi model dạng streaming"""
+        """
+        @desc Gọi model Ollama theo chế độ streaming — sinh ra từng chunk phản hồi dưới dạng OllamaResponseChunk
+        @params prompt (str): Nội dung prompt gửi đến model
+        @params kwargs (Any): Các tham số tùy chọn ghi đè cấu hình mặc định
+        @return Generator[OllamaResponseChunk, None, None]: Generator sinh ra từng chunk phản hồi từ model
+        """
         url = f"{self.base_url}/api/generate"
         payload = {
             "model": self.model_name,
@@ -77,12 +108,21 @@ class OllamaInstance:
                         if chunk_data.get("done"):
                             break
         except Exception as e:
-            print(f"Lỗi Stream Ollama: {e}")
+            from core.logger import custom_logger
+            custom_logger.error(f"[Ollama] Stream error | model={self.model_name} | error={e}", exc_info=True)
             yield OllamaResponseChunk(f"Error: {str(e)}")
 
 class OllamaResponseChunk:
     def __init__(self, content: str):
+        """
+        @desc Khởi tạo một chunk phản hồi từ Ollama với nội dung văn bản tương ứng
+        @params content (str): Nội dung văn bản của chunk phản hồi
+        """
         self.content = content
 
     def __str__(self):
+        """
+        @desc Trả về nội dung văn bản của chunk khi chuyển đổi sang chuỗi
+        @return str: Nội dung văn bản của chunk phản hồi
+        """
         return self.content
