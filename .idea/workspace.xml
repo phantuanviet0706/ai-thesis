@@ -5,68 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8ba4c288-c751-43f1-b8dc-12c4c41593f0" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/api/v1/endpoints/base/auth_controller.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/api/v1/endpoints/base/sample_controller.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/constants/securities.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/repositories/base_repository.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/repositories/sample_repository.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/repositories/user_repository.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/requirements.in" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/schemas/auth_schema.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/schemas/base_schema.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/schemas/sample_schema.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/scripts/setup.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/auth_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/base_service.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/sample_service.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/thesis.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/thesis.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/kr_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/kr_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/orchestrator.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/orchestrator.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/psych_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/psych_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/agents/synth_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/synth_agent.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/api_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/api_router.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/chat_router.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/constants.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/common/model_type.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/controller/chat_controller.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/logger.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/logger.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/database.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/mysql_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/mysql_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/postgres_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/postgres_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/database/vector_db_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/vector_db_manager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/api_key.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/api_key.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/base_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/base_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/cart.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/cart.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/cart_item.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/cart_item.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/conversation_session.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/conversation_session.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/order.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/order.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/payment.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/payment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/product_review.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/product_review.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/sample_model.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/sample_model.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/entity/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exceptions/app_exception.py" beforeDir="false" afterPath="$PROJECT_DIR$/exceptions/app_exception.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/exceptions/global_exception_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/exceptions/global_exception_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/v1/endpoints/base/chat_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/v1/endpoints/base/chat_controller.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/api/v1/endpoints/base/sample_controller.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/v1/endpoints/base/sample_controller.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/graph/graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/graph/graph.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graph/router.py" beforeDir="false" afterPath="$PROJECT_DIR$/graph/router.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/graph/state.py" beforeDir="false" afterPath="$PROJECT_DIR$/graph/state.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/base_llm_provider.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/base_llm_provider.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/huggingface_local_provider.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/huggingface_local_provider.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/huggingface_provider.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/huggingface_provider.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/model_factory.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/model_factory.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/ollama_provider.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/ollama_provider.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/models/open_ai_provider.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/open_ai_provider.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/repositories/conversation_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/repositories/conversation_repository.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/retrieval/chromadb_client.py" beforeDir="false" afterPath="$PROJECT_DIR$/retrieval/chromadb_client.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/retrieval/embeddings.py" beforeDir="false" afterPath="$PROJECT_DIR$/retrieval/embeddings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/retrieval/graph_rag.py" beforeDir="false" afterPath="$PROJECT_DIR$/retrieval/graph_rag.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/retrieval/hybrid_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/retrieval/hybrid_search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/utils/helper.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/helper.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/sample_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/sample_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,6 +33,10 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 0
 }</component>
@@ -99,34 +48,35 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;FastAPI.main.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.constants.executor&quot;: &quot;Run&quot;,
-    &quot;Python.graph.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.user_profile.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultAutoModeForALLUsers.v1&quot;: &quot;true&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/ext_project/ai-thesis&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "FastAPI.main.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.constants.executor": "Run",
+    "Python.graph.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.user_profile.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultAutoModeForALLUsers.v1": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "D:/ext_project/ai-thesis",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\ext_project\ai-thesis" />
@@ -154,7 +104,9 @@
       <option name="IS_MODULE_SDK" value="false" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
       <option name="launchJavascriptDebuger" value="false" />
       <method v="2" />
     </configuration>
@@ -162,7 +114,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-python-sdk-024ed6589d45-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.23567.174" />
+        <option value="bundled-js-predefined-d6986cc7102b-31caf2ab9e3c-JavaScript-PY-261.24374.152" />
+        <option value="bundled-python-sdk-c59985aa861c-c2ffad84badb-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-261.24374.152" />
       </set>
     </attachedChunks>
   </component>
@@ -178,6 +131,7 @@
       <workItem from="1780328623860" duration="13344000" />
       <workItem from="1781102823714" duration="358000" />
       <workItem from="1781105034900" duration="14318000" />
+      <workItem from="1781296952014" duration="599000" />
     </task>
     <servers />
   </component>
@@ -197,8 +151,8 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/thesis$constants.coverage" NAME="constants Coverage Results" MODIFIED="1781105044730" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/common" />
+    <SUITE FILE_PATH="coverage/thesis$main.coverage" NAME="main Coverage Results" MODIFIED="1781297137311" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/thesis$user_profile.coverage" NAME="user_profile Coverage Results" MODIFIED="1781105406407" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/entity" />
     <SUITE FILE_PATH="coverage/thesis$graph.coverage" NAME="graph Coverage Results" MODIFIED="1781105160153" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/graph" />
-    <SUITE FILE_PATH="coverage/thesis$main.coverage" NAME="main Coverage Results" MODIFIED="1781105593552" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
   </component>
 </project>

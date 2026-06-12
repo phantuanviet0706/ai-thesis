@@ -18,7 +18,7 @@ router = APIRouter()
 class ChatController:
     service: ChatService = Depends()
 
-    @router.post("", response_model=ApiResponse[ChatResponse])
+    @router.post("/", response_model=ApiResponse[ChatResponse])
     async def chat(
         self,
         request: ChatRequest,

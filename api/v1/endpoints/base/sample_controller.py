@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from fastapi_utils import cbv
+from fastapi_utils.cbv import cbv
 
 from schemas.api_schema import ApiResponse
 from services.sample_service import SampleService

@@ -53,6 +53,7 @@ app.include_router(api_router, prefix="/api/v1")
 
 register_exception_handler(app=app)
 
+warnings.filterwarnings("ignore", category=PendingDeprecationWarning)
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", message=".*pkg_resources is deprecated.*")
 

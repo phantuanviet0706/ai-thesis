@@ -9,10 +9,14 @@ Graph topology (thesis §3.3.2 + Figure):
   synth_agent  →[normal]→ END            (response generated, turn complete)
   error_handler→[normal]→ END
 
-Checkpointing: Redis checkpointer stores state per thread_id:checkpoint_id with TTL=3600s.
+Checkpointing: Redis Stack checkpointer (preferred) or SQLite fallback (persistent).
 """
 
+import os
+import sqlite3
+
 from langchain_core.messages import AIMessage  # used in _error_handler_node
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.redis import RedisSaver
 from langgraph.graph import END, START, StateGraph
 
@@ -81,20 +85,53 @@ def _build_graph() -> StateGraph:
     return graph
 
 
-def _build_redis_checkpointer() -> RedisSaver:
-    """
-    @desc Khởi tạo và cấu hình Redis checkpointer để lưu trữ trạng thái hội thoại theo thread_id với TTL=3600s
-    @return RedisSaver: Instance RedisSaver đã được setup và sẵn sàng sử dụng
-    """
-    custom_logger.info("[Graph] Setting up Redis checkpointer...")
+def _is_redis_stack_available() -> bool:
+    """Probe Redis Stack availability silently — no logs, no exceptions."""
     try:
-        saver = RedisSaver(conn=redis_client)
-        saver.setup()
-        custom_logger.info("[Graph] Redis checkpointer ready")
-        return saver
+        redis_client.execute_command("FT._LIST")
+        return True
+    except Exception:
+        return False
+
+
+def _build_sqlite_checkpointer():
+    """SQLite persistent checkpointer — no external dependencies required."""
+    from langgraph.checkpoint.sqlite import SqliteSaver
+
+    db_dir = "data"
+    os.makedirs(db_dir, exist_ok=True)
+    db_path = os.path.join(db_dir, "checkpoints.db")
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    saver = SqliteSaver(conn)
+    custom_logger.info(f"[Graph] SQLite checkpointer ready at '{db_path}'")
+    return saver
+
+
+def _build_checkpointer():
+    """
+    @desc Khởi tạo checkpointer theo thứ tự ưu tiên:
+    1. Redis Stack (nếu có RediSearch module) — production
+    2. SQLite (persistent, không cần Redis Stack) — dev/thesis
+    3. MemorySaver (in-memory, last resort) — state mất khi restart
+    """
+    custom_logger.info("[Graph] Setting up checkpointer...")
+
+    if _is_redis_stack_available():
+        try:
+            saver = RedisSaver(redis_client=redis_client)
+            saver.setup()
+            custom_logger.info("[Graph] Redis Stack checkpointer ready")
+            return saver
+        except Exception as exc:
+            custom_logger.warning(f"[Graph] Redis Stack setup failed unexpectedly: {exc}")
+
+    custom_logger.info("[Graph] Redis Stack not detected — using SQLite checkpointer (persistent)")
+
+    try:
+        return _build_sqlite_checkpointer()
     except Exception as exc:
-        custom_logger.error(f"[Graph] Redis checkpointer setup failed: {exc}", exc_info=True)
-        raise
+        custom_logger.warning(f"[Graph] SQLite unavailable ({exc}) — using MemorySaver (not persistent)")
+        return MemorySaver()
 
 
 def compile_graph():
@@ -104,10 +141,10 @@ def compile_graph():
     """
     custom_logger.info("[Graph] Compiling LangGraph application (5 nodes)...")
     try:
-        checkpointer = _build_redis_checkpointer()
+        checkpointer = _build_checkpointer()
         graph = _build_graph()
         compiled = graph.compile(checkpointer=checkpointer)
-        custom_logger.info("[Graph] Compilation complete — Redis checkpointing enabled")
+        custom_logger.info("[Graph] Compilation complete — checkpointing enabled")
         return compiled
     except Exception as exc:
         custom_logger.error(f"[Graph] Compilation failed: {exc}", exc_info=True)
