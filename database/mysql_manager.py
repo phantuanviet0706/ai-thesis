@@ -13,6 +13,7 @@ class MySQLConfig(DatabaseSettings):
     max_overflow: int = settings.DB_MAX_OVERFLOW
 
 
+@DBManager.register_manager
 class MySQLManager:
     @staticmethod
     def init():

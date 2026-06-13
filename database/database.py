@@ -1,4 +1,5 @@
 from contextlib import contextmanager
+from core.logger import custom_logger
 from typing import Any, Dict, List
 
 from pydantic_settings import BaseSettings
@@ -45,7 +46,6 @@ class DBManager:
         """
         @desc Khởi tạo tất cả các cơ sở dữ liệu đã đăng ký bằng cách gọi phương thức init() trên từng manager
         """
-        from core.logger import custom_logger
         for manager in cls._registered_managers:
             manager.init()
         custom_logger.info(f"[DBManager] All {len(cls._registered_managers)} databases initialized")
@@ -93,3 +93,5 @@ class DBManager:
             raise
         finally:
             session.close()
+
+db_manager = DBManager()

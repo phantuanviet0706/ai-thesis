@@ -20,6 +20,13 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.redis import RedisSaver
 from langgraph.graph import END, START, StateGraph
 
+try:
+    from langgraph.checkpoint.sqlite import SqliteSaver
+    _SQLITE_AVAILABLE = True
+except ImportError:
+    SqliteSaver = None
+    _SQLITE_AVAILABLE = False
+
 from agents.kr_agent import kr_agent_node
 from agents.orchestrator import orchestrator_node
 from agents.psych_agent import psych_agent_node
@@ -95,9 +102,9 @@ def _is_redis_stack_available() -> bool:
 
 
 def _build_sqlite_checkpointer():
-    """SQLite persistent checkpointer — no external dependencies required."""
-    from langgraph.checkpoint.sqlite import SqliteSaver
-
+    """SQLite persistent checkpointer — requires langgraph-checkpoint-sqlite."""
+    if not _SQLITE_AVAILABLE:
+        raise ImportError("pip install langgraph-checkpoint-sqlite")
     db_dir = "data"
     os.makedirs(db_dir, exist_ok=True)
     db_path = os.path.join(db_dir, "checkpoints.db")

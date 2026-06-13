@@ -9,7 +9,10 @@ from api.api_router import api_router
 from core.config import settings
 from core.logger import custom_logger
 from database.database import DBManager
+import database.mysql_manager  # noqa: F401 — registers MySQLManager via @DBManager.register_manager
+import database.postgres_manager  # noqa: F401 — registers PostgresManager via @DBManager.register_manager
 from exceptions.global_exception_handler import register_exception_handler
+from graph.graph import get_compiled_graph
 from middleware.rate_limit_middleware import RateLimitMiddleware
 
 load_dotenv()
@@ -21,7 +24,6 @@ async def lifespan(app: FastAPI):
     custom_logger.info("Databases initialized.")
     custom_logger.info("Initializing Pancharm MAS — pre-warming LangGraph graph...")
     try:
-        from graph.graph import get_compiled_graph
         get_compiled_graph()
         custom_logger.info("LangGraph graph compiled and ready.")
     except Exception as exc:
