@@ -11,6 +11,7 @@ Response structure follows AIDA marketing model:
 """
 
 import time
+from functools import lru_cache
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
@@ -27,7 +28,7 @@ _SYNTH_SYSTEM = read_file_contents("resources/prompt/synth_agent.md")
 def _format_products_for_synth(products: list[ProductDoc], scores: list[float]) -> str:
     """
     @desc Định dạng danh sách sản phẩm và điểm số thành chuỗi văn bản để đưa vào context của Synth Agent
-    @params products (list[ProductDoc]): Danh sách sản phẩm được trả về từ KR Agent
+    @params products (list[ProductDoc]): Danh sách sản phẩm được trả về từ KR Agent (tối đa 3 sản phẩm đầu)
     @params scores (list[float]): Danh sách điểm composite tương ứng với từng sản phẩm
     @return str: Chuỗi văn bản mô tả sản phẩm đã được định dạng, hoặc thông báo không tìm thấy sản phẩm
     """
@@ -35,10 +36,12 @@ def _format_products_for_synth(products: list[ProductDoc], scores: list[float]) 
         return "Không có sản phẩm nào được tìm thấy."
 
     lines = ["=== SẢN PHẨM TÌM ĐƯỢC ==="]
-    for i, (p, score) in enumerate(zip(products, scores), 1):
+    for i, (p, score) in enumerate(zip(products[:3], scores[:3]), 1):
         price = f"{p.unit_price:,.0f}₫"
         if p.sale_price and p.sale_price < p.unit_price:
             price = f"~~{p.unit_price:,.0f}₫~~ → {p.sale_price:,.0f}₫"
+
+        chunk_preview = p.chunk_text[:120] + "..." if len(p.chunk_text) > 120 else p.chunk_text
 
         lines.append(
             f"\n[{i}] {p.name}"
@@ -46,16 +49,13 @@ def _format_products_for_synth(products: list[ProductDoc], scores: list[float]) 
             + f"\n    Danh mục: {p.category or 'N/A'} | Thương hiệu: {p.brand or 'Pancharm'}"
             + f"\n    Giá: {price} | Còn hàng: {'Có' if p.in_stock else 'Hết hàng'}"
             + (f"\n    Mô tả: {p.short_description}" if p.short_description else "")
-            + (f"\n    Chi tiết: {p.chunk_text[:200]}..." if len(p.chunk_text) > 200 else f"\n    Chi tiết: {p.chunk_text}")
+            + f"\n    Chi tiết: {chunk_preview}"
         )
     return "\n".join(lines)
 
 
-def _build_synth_llm() -> ChatAnthropic:
-    """
-    @desc Khởi tạo LLM chính (Sonnet) dùng cho Synth Agent với temperature cao để tạo phản hồi tự nhiên
-    @return ChatAnthropic: Instance ChatAnthropic với temperature=0.7 và max_tokens=1024
-    """
+@lru_cache(maxsize=1)
+def _get_llm() -> ChatAnthropic:
     return ChatAnthropic(
         model=settings.ANTHROPIC_MODEL_PRIMARY,
         api_key=settings.ANTHROPIC_API_KEY,
@@ -127,11 +127,10 @@ async def synth_agent_node(state: ConversationState) -> dict:
         f"psych={psych_state} | strategy='{consult_strategy[:40]}'"
     )
 
-    llm = _build_synth_llm()
     messages, _ = _build_synth_messages(state)
 
     chunks: list[str] = []
-    async for chunk in llm.astream(messages):
+    async for chunk in _get_llm().astream(messages):
         if chunk.content:
             chunks.append(chunk.content)
 

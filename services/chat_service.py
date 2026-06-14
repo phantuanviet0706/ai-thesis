@@ -30,7 +30,7 @@ class ChatService:
             f"new_session={is_new} | msg_len={len(request.message)}"
         )
 
-        graph = get_compiled_graph()
+        graph = await get_compiled_graph()
 
         config = {"configurable": {"thread_id": session_id}}
         input_state = self._build_input_state(request, session_id)
@@ -114,7 +114,7 @@ class ChatService:
             f"[ChatService] stream_chat | session={session_id} | channel={request.channel}"
         )
 
-        graph = get_compiled_graph()
+        graph = await get_compiled_graph()
         input_state = self._build_input_state(request, session_id)
         config = {"configurable": {"thread_id": session_id}}
 

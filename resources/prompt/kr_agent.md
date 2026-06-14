@@ -72,11 +72,6 @@ Chỉ thêm filter khi có thông tin **RÕ RÀNG** từ câu hỏi. Không suy 
 | "trên 10 triệu" / "cao cấp" / "VIP" | `price.$gte: 10000000` |
 | "từ 3 đến 5 triệu" | `price.$gte: 3000000, price.$lte: 5000000` |
 
-### Phân loại search_intent
-- **overview**: câu hỏi chung, tìm kiếm ban đầu, "có loại nào", so sánh → collection `product_overview`
-- **specs**: hỏi kỹ thuật, chất liệu, kích thước, độ tinh khiết, trọng lượng → collection `product_specs`
-- **reviews**: hỏi đánh giá, trải nghiệm, độ bền, phản hồi khách hàng → collection `product_reviews`
-
 ---
 
 ## ĐỊNH DẠNG OUTPUT (JSON hợp lệ, KHÔNG có text khác)
@@ -88,14 +83,6 @@ Chỉ thêm filter khi có thông tin **RÕ RÀNG** từ câu hỏi. Không suy 
     "category": {"$eq": "<tên danh mục nếu rõ ràng>"},
     "price": {"$lte": 5000000},
     "in_stock": {"$eq": true}
-  },
-  "search_intent": "<overview|specs|reviews>",
-  "extracted_entities": {
-    "product_type": "<loại sản phẩm hoặc null>",
-    "occasion": "<dịp hoặc null>",
-    "recipient": "<người nhận hoặc null>",
-    "budget_vnd": "<số VND hoặc null>",
-    "feng_shui_element": "<kim|moc|thuy|hoa|tho hoặc null>"
   }
 }
 ```
@@ -115,14 +102,6 @@ Chỉ đưa các field vào `metadata_filters` khi có thông tin rõ ràng từ
     "category": {"$eq": "Nhẫn"},
     "price": {"$lte": 15000000},
     "in_stock": {"$eq": true}
-  },
-  "search_intent": "overview",
-  "extracted_entities": {
-    "product_type": "nhẫn cưới",
-    "occasion": "cưới",
-    "recipient": "cặp đôi",
-    "budget_vnd": 15000000,
-    "feng_shui_element": null
   }
 }
 ```
@@ -136,14 +115,6 @@ Chỉ đưa các field vào `metadata_filters` khi có thông tin rõ ràng từ
     "category": {"$eq": "Vòng tay"},
     "price": {"$lte": 3000000},
     "in_stock": {"$eq": true}
-  },
-  "search_intent": "overview",
-  "extracted_entities": {
-    "product_type": "vòng tay",
-    "occasion": null,
-    "recipient": "bản thân",
-    "budget_vnd": 3000000,
-    "feng_shui_element": "hoa"
   }
 }
 ```
@@ -155,14 +126,6 @@ Chỉ đưa các field vào `metadata_filters` khi có thông tin rõ ràng từ
   "enriched_query": "bạc 925 sterling silver độ tinh khiết chất liệu bảo quản oxy hóa xỉn màu đen bạc thường so sánh trang sức bạc bền",
   "metadata_filters": {
     "in_stock": {"$eq": true}
-  },
-  "search_intent": "specs",
-  "extracted_entities": {
-    "product_type": "trang sức bạc",
-    "occasion": null,
-    "recipient": null,
-    "budget_vnd": null,
-    "feng_shui_element": null
   }
 }
 ```
@@ -175,14 +138,6 @@ Chỉ đưa các field vào `metadata_filters` khi có thông tin rõ ràng từ
   "metadata_filters": {
     "price": {"$lte": 5000000},
     "in_stock": {"$eq": true}
-  },
-  "search_intent": "overview",
-  "extracted_entities": {
-    "product_type": "trang sức",
-    "occasion": "sinh nhật",
-    "recipient": "mẹ 60 tuổi",
-    "budget_vnd": 5000000,
-    "feng_shui_element": null
   }
 }
 ```
@@ -195,14 +150,6 @@ Chỉ đưa các field vào `metadata_filters` khi có thông tin rõ ràng từ
   "metadata_filters": {
     "category": {"$eq": "Vòng tay"},
     "in_stock": {"$eq": true}
-  },
-  "search_intent": "reviews",
-  "extracted_entities": {
-    "product_type": "vòng tay",
-    "occasion": null,
-    "recipient": null,
-    "budget_vnd": null,
-    "feng_shui_element": null
   }
 }
 ```

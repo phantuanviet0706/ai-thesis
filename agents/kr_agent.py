@@ -9,6 +9,7 @@ Three-stage Graph RAG strategy (thesis §3.2.2):
 
 import json
 import time
+from functools import lru_cache
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -18,21 +19,18 @@ from core.logger import custom_logger
 from graph.state import ConversationState
 from retrieval.graph_rag import enrich_query
 from retrieval.hybrid_search import hybrid_search
-from utils.helper import read_file_contents
+from utils.helper import extract_json, read_file_contents
 
 _EXPANSION_PROMPT = read_file_contents("resources/prompt/kr_agent.md")
 
 
-def _build_kr_llm() -> ChatAnthropic:
-    """
-    @desc Khởi tạo LLM tốc độ cao (Haiku) dùng cho KR Agent
-    @return ChatAnthropic: Instance ChatAnthropic với temperature=0 và max_tokens=256
-    """
+@lru_cache(maxsize=1)
+def _get_llm() -> ChatAnthropic:
     return ChatAnthropic(
         model=settings.ANTHROPIC_MODEL_FAST,
         api_key=settings.ANTHROPIC_API_KEY,
         temperature=0.0,
-        max_tokens=256,
+        max_tokens=180,
     )
 
 
@@ -52,11 +50,11 @@ def _expand_query(llm: ChatAnthropic, query: str) -> tuple[str, dict]:
 
     metadata_filters: dict = {}
     try:
-        parsed = json.loads(response.content)
+        parsed = extract_json(response.content)
         llm_enriched = parsed.get("enriched_query", query)
         metadata_filters = parsed.get("metadata_filters", {})
         metadata_filters = {k: v for k, v in metadata_filters.items() if v}
-    except (json.JSONDecodeError, AttributeError):
+    except (json.JSONDecodeError, AttributeError, ValueError):
         llm_enriched = query
         custom_logger.warning("[KR Agent] Query expansion JSON parse failed, using raw query")
 
@@ -73,8 +71,6 @@ def kr_agent_node(state: ConversationState) -> dict:
     t0 = time.perf_counter()
     custom_logger.info("[KR Agent] start")
 
-    llm = _build_kr_llm()
-
     messages = state.get("messages", [])
     last_user_text = ""
     for msg in reversed(messages):
@@ -85,7 +81,7 @@ def kr_agent_node(state: ConversationState) -> dict:
         last_user_text = str(messages[-1].content)
 
     try:
-        enriched_query, metadata_filters = _expand_query(llm, last_user_text)
+        enriched_query, metadata_filters = _expand_query(_get_llm(), last_user_text)
         custom_logger.info(
             f"[KR Agent] query expanded | filters={list(metadata_filters.keys())} | "
             f"query_len={len(enriched_query)}"

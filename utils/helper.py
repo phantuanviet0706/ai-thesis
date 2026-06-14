@@ -1,3 +1,4 @@
+import json
 import os
 
 # Project root — one level up from utils/
@@ -13,3 +14,17 @@ def read_file_contents(file_path: str) -> str:
     abs_path = os.path.join(BASE_DIR, file_path)
     with open(abs_path, "r", encoding="utf-8") as f:
         return f.read().strip()
+
+
+def extract_json(text: str) -> dict:
+    """
+    @desc Trích xuất JSON từ phản hồi LLM, xử lý cả khi bị bọc trong markdown code fence
+    @params text (str): Chuỗi văn bản phản hồi từ LLM, có thể chứa ```json ... ``` hoặc JSON thuần
+    @return dict: Dictionary đã được parse từ JSON
+    """
+    text = text.strip()
+    start = text.find('{')
+    end = text.rfind('}')
+    if start != -1 and end != -1 and end > start:
+        text = text[start:end + 1]
+    return json.loads(text)

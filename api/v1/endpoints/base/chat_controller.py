@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi_utils.cbv import cbv
 
-from api.deps import optional_auth, require_auth
+from api.deps import optional_auth
 from core.logger import custom_logger
 from schemas.api_schema import ApiResponse
 from schemas.chat_schema import ChatRequest, ChatResponse
@@ -22,7 +22,7 @@ class ChatController:
     async def chat(
         self,
         request: ChatRequest,
-        token_payload: dict = Depends(require_auth),
+        token_payload: dict | None = Depends(optional_auth),
     ):
         """
         @desc Endpoint chat đồng bộ với timeout 30 giây. Yêu cầu token JWT Bearer hợp lệ. Gọi service xử lý chat và trả về phản hồi hoàn chỉnh sau khi hoàn tất.
@@ -32,7 +32,7 @@ class ChatController:
         """
         custom_logger.info(
             f"[ChatController] POST /chat | session={request.session_id} | "
-            f"channel={request.channel} | user={token_payload.get('sub')}"
+            f"channel={request.channel} | user={token_payload.get('sub') if token_payload else 'guest'}"
         )
         try:
             response = await asyncio.wait_for(

@@ -19,6 +19,7 @@ Output governs how Synth Agent frames the final response (feedback loop).
 
 import json
 import time
+from functools import lru_cache
 
 from langchain_anthropic import ChatAnthropic
 from langchain_core.messages import HumanMessage, SystemMessage
@@ -26,29 +27,26 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from core.config import settings
 from core.logger import custom_logger
 from graph.state import ConversationState, PsychState
-from utils.helper import read_file_contents
+from utils.helper import extract_json, read_file_contents
 
 _PSYCH_PROMPT = read_file_contents("resources/prompt/psych_agent.md")
 
 
-def _build_psych_llm() -> ChatAnthropic:
-    """
-    @desc Khởi tạo LLM tốc độ cao (Haiku) dùng cho Psych Agent
-    @return ChatAnthropic: Instance ChatAnthropic với temperature=0 và max_tokens=256
-    """
+@lru_cache(maxsize=1)
+def _get_llm() -> ChatAnthropic:
     return ChatAnthropic(
         model=settings.ANTHROPIC_MODEL_FAST,
         api_key=settings.ANTHROPIC_API_KEY,
         temperature=0.0,
-        max_tokens=256,
+        max_tokens=200,
     )
 
 
-def _format_conversation_history(messages: list, max_turns: int = 10) -> str:
+def _format_conversation_history(messages: list, max_turns: int = 3) -> str:
     """
     @desc Định dạng N lượt hội thoại gần nhất thành chuỗi văn bản cho context window của Psych Agent
     @params messages (list): Danh sách các tin nhắn trong lịch sử hội thoại
-    @params max_turns (int): Số lượt hội thoại tối đa cần lấy, mặc định là 10
+    @params max_turns (int): Số lượt hội thoại tối đa cần lấy, mặc định là 3
     @return str: Chuỗi văn bản lịch sử hội thoại đã được định dạng theo vai trò người dùng và tư vấn viên
     """
     recent = messages[-max_turns * 2:]
@@ -69,10 +67,9 @@ def psych_agent_node(state: ConversationState) -> dict:
     msg_count = len(state.get("messages", []))
     custom_logger.info(f"[Psych Agent] start | history_msgs={msg_count}")
 
-    llm = _build_psych_llm()
     conversation_text = _format_conversation_history(state.get("messages", []))
 
-    response = llm.invoke([
+    response = _get_llm().invoke([
         SystemMessage(content=_PSYCH_PROMPT),
         HumanMessage(content=f"Lịch sử hội thoại:\n{conversation_text}"),
     ])
@@ -83,7 +80,7 @@ def psych_agent_node(state: ConversationState) -> dict:
     consult_strategy = "Tiếp tục tư vấn chung"
 
     try:
-        parsed = json.loads(response.content)
+        parsed = extract_json(response.content)
         psych_state_raw = parsed.get("psych_state", "CURIOUS")
         psych_state = PsychState(psych_state_raw) if psych_state_raw in PsychState._value2member_map_ else PsychState.CURIOUS
         psych_confidence = float(parsed.get("psych_confidence", 0.5))

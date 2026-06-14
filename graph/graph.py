@@ -9,11 +9,10 @@ Graph topology (thesis §3.3.2 + Figure):
   synth_agent  →[normal]→ END            (response generated, turn complete)
   error_handler→[normal]→ END
 
-Checkpointing: Redis Stack checkpointer (preferred) or SQLite fallback (persistent).
+Checkpointing: Redis Stack checkpointer (preferred) or AsyncSQLite fallback (persistent).
 """
 
 import os
-import sqlite3
 
 from langchain_core.messages import AIMessage  # used in _error_handler_node
 from langgraph.checkpoint.memory import MemorySaver
@@ -21,10 +20,11 @@ from langgraph.checkpoint.redis import RedisSaver
 from langgraph.graph import END, START, StateGraph
 
 try:
-    from langgraph.checkpoint.sqlite import SqliteSaver
+    import aiosqlite
+    from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
     _SQLITE_AVAILABLE = True
 except ImportError:
-    SqliteSaver = None
+    AsyncSqliteSaver = None
     _SQLITE_AVAILABLE = False
 
 from agents.kr_agent import kr_agent_node
@@ -101,24 +101,25 @@ def _is_redis_stack_available() -> bool:
         return False
 
 
-def _build_sqlite_checkpointer():
-    """SQLite persistent checkpointer — requires langgraph-checkpoint-sqlite."""
+async def _build_sqlite_checkpointer():
+    """AsyncSQLite persistent checkpointer — requires langgraph-checkpoint-sqlite."""
     if not _SQLITE_AVAILABLE:
         raise ImportError("pip install langgraph-checkpoint-sqlite")
     db_dir = "data"
     os.makedirs(db_dir, exist_ok=True)
     db_path = os.path.join(db_dir, "checkpoints.db")
-    conn = sqlite3.connect(db_path, check_same_thread=False)
-    saver = SqliteSaver(conn)
-    custom_logger.info(f"[Graph] SQLite checkpointer ready at '{db_path}'")
+    conn = await aiosqlite.connect(db_path)
+    saver = AsyncSqliteSaver(conn)
+    await saver.setup()
+    custom_logger.info(f"[Graph] AsyncSQLite checkpointer ready at '{db_path}'")
     return saver
 
 
-def _build_checkpointer():
+async def _build_checkpointer():
     """
     @desc Khởi tạo checkpointer theo thứ tự ưu tiên:
     1. Redis Stack (nếu có RediSearch module) — production
-    2. SQLite (persistent, không cần Redis Stack) — dev/thesis
+    2. AsyncSQLite (persistent, không cần Redis Stack) — dev/thesis
     3. MemorySaver (in-memory, last resort) — state mất khi restart
     """
     custom_logger.info("[Graph] Setting up checkpointer...")
@@ -132,23 +133,23 @@ def _build_checkpointer():
         except Exception as exc:
             custom_logger.warning(f"[Graph] Redis Stack setup failed unexpectedly: {exc}")
 
-    custom_logger.info("[Graph] Redis Stack not detected — using SQLite checkpointer (persistent)")
+    custom_logger.info("[Graph] Redis Stack not detected — using AsyncSQLite checkpointer (persistent)")
 
     try:
-        return _build_sqlite_checkpointer()
+        return await _build_sqlite_checkpointer()
     except Exception as exc:
         custom_logger.warning(f"[Graph] SQLite unavailable ({exc}) — using MemorySaver (not persistent)")
         return MemorySaver()
 
 
-def compile_graph():
+async def compile_graph():
     """
-    @desc Biên dịch và trả về ứng dụng LangGraph hoàn chỉnh với Redis checkpointing, nên gọi một lần khi khởi động
-    @return CompiledGraph: Đồ thị đã được biên dịch với checkpointer Redis, sẵn sàng xử lý yêu cầu
+    @desc Biên dịch và trả về ứng dụng LangGraph hoàn chỉnh với checkpointing, nên gọi một lần khi khởi động
+    @return CompiledGraph: Đồ thị đã được biên dịch với checkpointer, sẵn sàng xử lý yêu cầu
     """
     custom_logger.info("[Graph] Compiling LangGraph application (5 nodes)...")
     try:
-        checkpointer = _build_checkpointer()
+        checkpointer = await _build_checkpointer()
         graph = _build_graph()
         compiled = graph.compile(checkpointer=checkpointer)
         custom_logger.info("[Graph] Compilation complete — checkpointing enabled")
@@ -161,7 +162,7 @@ def compile_graph():
 _compiled_graph = None
 
 
-def get_compiled_graph():
+async def get_compiled_graph():
     """
     @desc Trả về instance đồ thị đã biên dịch theo pattern Singleton, tự động biên dịch lần đầu nếu chưa có
     @return CompiledGraph: Instance đồ thị LangGraph dùng chung cho toàn bộ ứng dụng
@@ -169,5 +170,5 @@ def get_compiled_graph():
     global _compiled_graph
     if _compiled_graph is None:
         custom_logger.info("[Graph] Lazy compile triggered")
-        _compiled_graph = compile_graph()
+        _compiled_graph = await compile_graph()
     return _compiled_graph

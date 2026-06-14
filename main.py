@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     custom_logger.info("Databases initialized.")
     custom_logger.info("Initializing Pancharm MAS — pre-warming LangGraph graph...")
     try:
-        get_compiled_graph()
+        await get_compiled_graph()
         custom_logger.info("LangGraph graph compiled and ready.")
     except Exception as exc:
         custom_logger.warning(f"Graph pre-warm failed (non-fatal): {exc}")
@@ -37,6 +37,7 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description=settings.APP_DESCRIPTION,
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 # CORS — restricted to approved retail partner domains
