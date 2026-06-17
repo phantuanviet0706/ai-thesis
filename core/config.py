@@ -65,6 +65,25 @@ class Setting(BaseSettings):
     LANGCHAIN_API_KEY: str = ""
     LANGCHAIN_PROJECT: str = "pancharm-mas"
 
+    # Telegram
+    TELEGRAM_BOT_TOKEN: str = ""
+    TELEGRAM_WEBHOOK_SECRET: str = ""
+    TELEGRAM_WEBHOOK_BASE_URL: str = ""   # https://yourdomain.com | ngrok URL khi dev
+
+    # Facebook Messenger
+    MESSENGER_PAGE_ACCESS_TOKEN: str = ""
+    MESSENGER_APP_SECRET: str = ""        # để verify X-Hub-Signature-256
+    MESSENGER_VERIFY_TOKEN: str = ""      # để verify webhook khi setup trên Facebook
+
+    # Zalo OA
+    ZALO_OA_ACCESS_TOKEN: str = ""
+    ZALO_APP_SECRET: str = ""             # để verify MAC signature
+
+    # Kafka
+    KAFKA_BOOTSTRAP_SERVERS: str = "localhost:9092"
+    KAFKA_CLIENT_ID: str = "pancharm-mas"
+    KAFKA_CONSUMER_GROUP: str = "pancharm-mas"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
