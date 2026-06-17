@@ -4,18 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8ba4c288-c751-43f1-b8dc-12c4c41593f0" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/adapter/base_adapter.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/adapter/telegram_adapter.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/infrastructure/kafka_client.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/schemas/standard_message.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/api_router.py" beforeDir="false" afterPath="$PROJECT_DIR$/api/api_router.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/config.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/config.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/checkpoints.db-shm" beforeDir="false" afterPath="$PROJECT_DIR$/data/checkpoints.db-shm" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/checkpoints.db-wal" beforeDir="false" afterPath="$PROJECT_DIR$/data/checkpoints.db-wal" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-    </list>
+    <list default="true" id="8ba4c288-c751-43f1-b8dc-12c4c41593f0" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -194,7 +183,7 @@
       <workItem from="1780328623860" duration="13344000" />
       <workItem from="1781102823714" duration="358000" />
       <workItem from="1781105034900" duration="14318000" />
-      <workItem from="1781296952014" duration="36199000" />
+      <workItem from="1781296952014" duration="37106000" />
     </task>
     <servers />
   </component>
