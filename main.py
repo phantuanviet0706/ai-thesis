@@ -11,7 +11,6 @@ from core.config import settings
 from core.logger import custom_logger
 from database.database import DBManager
 import database.mysql_manager  # noqa: F401 — registers MySQLManager via @DBManager.register_manager
-import database.postgres_manager  # noqa: F401 — registers PostgresManager via @DBManager.register_manager
 from exceptions.global_exception_handler import register_exception_handler
 from graph.graph import get_compiled_graph
 from messaging.consumer import BotMessageConsumer
