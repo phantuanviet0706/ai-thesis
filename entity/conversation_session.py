@@ -1,4 +1,4 @@
-from sqlalchemy import Column, BigInteger, String, Integer, DateTime, ForeignKey, Index
+from sqlalchemy import Column, BigInteger, String, Integer, DateTime, ForeignKey, Index, Text
 from sqlalchemy.sql import func
 
 from entity.base_model import Base
@@ -15,7 +15,7 @@ class ConversationSession(Base):
     status = Column(String(50), default='active', nullable=False, index=True)  # active, completed, abandoned, error
 
     final_psych_state = Column(String(50))
-    final_consult_strategy = Column(String(100))
+    final_consult_strategy = Column(Text)
     total_turns = Column(Integer, default=0, nullable=False)
     iteration_count = Column(Integer, default=0, nullable=False)
 

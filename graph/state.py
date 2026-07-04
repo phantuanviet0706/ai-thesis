@@ -61,5 +61,8 @@ class ConversationState(TypedDict):
     # Error state — triggers error_handler branch if non-None
     error_state: Optional[str]
 
-    # Loop guard — incremented (+1) each Orchestrator cycle via add reducer
-    iteration_count: Annotated[int, operator.add]
+    # Loop guard — overwrite each cycle; Orchestrator returns current+1 explicitly
+    iteration_count: int
+
+    # Extraction Agent output — structured info extracted from conversation (per turn)
+    extracted_info: Optional[dict]

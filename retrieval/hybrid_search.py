@@ -1,4 +1,6 @@
+import json
 import time
+import unicodedata
 from typing import Any
 
 import numpy as np
@@ -16,6 +18,14 @@ from core.logger import custom_logger
 from database.vector_db_manager import VectorDBManager
 from entity.product_doc import ProductDoc
 from retrieval.embeddings import embed_query
+
+
+def _tokenize_vi(text: str) -> list[str]:
+    """
+    NFC normalize + lowercase trước khi split — tránh mismatch do encoding dấu tiếng Việt.
+    Ví dụ: "vòng tay" (precomposed) và "vòng tay" (decomposed) sẽ match được nhau.
+    """
+    return unicodedata.normalize("NFC", text.lower()).split()
 
 
 def _cosine_similarity(a: list[float], b: list[float]) -> float:
@@ -47,26 +57,41 @@ def _bm25_scores(query_tokens: list[str], corpus: list[list[str]]) -> list[float
 
 def _meta_score(metadata: dict[str, Any], filters: dict[str, Any]) -> float:
     """
-    @desc Tính điểm lọc metadata nhị phân — trả về 1.0 nếu tất cả điều kiện lọc được thỏa mãn, ngược lại trả về 0.0
+    @desc Tính điểm lọc metadata theo kiểu soft scoring — trả về tỷ lệ điều kiện thỏa mãn thay vì
+    all-or-nothing. Giúp sản phẩm gần đúng (vd: category khác nhưng giá phù hợp) vẫn xuất hiện.
     @params metadata (dict[str, Any]): Metadata của tài liệu cần kiểm tra
-    @params filters (dict[str, Any]): Bộ điều kiện lọc cứng cần kiểm tra, hỗ trợ toán tử $eq, $lte, $gte
-    @return float: 1.0 nếu tất cả điều kiện thỏa mãn, 0.0 nếu có ít nhất một điều kiện không thỏa mãn
+    @params filters (dict[str, Any]): Bộ điều kiện lọc hỗ trợ toán tử $eq, $lte, $gte
+    @return float: Tỷ lệ [0.0, 1.0] — số điều kiện thỏa / tổng điều kiện
     """
+    if not filters:
+        return 1.0
+
+    matches = 0
     for key, condition in filters.items():
         value = metadata.get(key)
         if value is None:
-            return 0.0
+            continue
+        passed = False
         if isinstance(condition, dict):
             op, threshold = next(iter(condition.items()))
-            if op == "$eq" and value != threshold:
-                return 0.0
-            if op == "$lte" and float(value) > float(threshold):
-                return 0.0
-            if op == "$gte" and float(value) < float(threshold):
-                return 0.0
-        elif value != condition:
-            return 0.0
-    return 1.0
+            if op == "$eq":
+                passed = value == threshold
+            elif op == "$lte":
+                try:
+                    passed = float(value) <= float(threshold)
+                except (TypeError, ValueError):
+                    pass
+            elif op == "$gte":
+                try:
+                    passed = float(value) >= float(threshold)
+                except (TypeError, ValueError):
+                    pass
+        else:
+            passed = value == condition
+        if passed:
+            matches += 1
+
+    return matches / len(filters)
 
 
 def _mmr_select(
@@ -123,7 +148,7 @@ def hybrid_search(
     )
 
     query_vec = embed_query(query)
-    query_tokens = query.lower().split()
+    query_tokens = _tokenize_vi(query)
 
     raw_candidates: list[tuple[ProductDoc, list[float], float]] = []
 
@@ -144,7 +169,7 @@ def hybrid_search(
             custom_logger.debug(f"[HybridSearch] collection='{collection_name}' → 0 results")
             continue
 
-        corpus_tokens = [d.lower().split() for d in docs_list]
+        corpus_tokens = [_tokenize_vi(d) for d in docs_list]
         sparse_scores = _bm25_scores(query_tokens, corpus_tokens)
 
         for i, (chunk_text, meta, doc_vec, distance) in enumerate(
@@ -160,6 +185,9 @@ def hybrid_search(
                 + LAMBDA_META * meta_score
             )
 
+            raw_attrs = meta.get("attributes")
+            attrs = json.loads(raw_attrs) if isinstance(raw_attrs, str) and raw_attrs else raw_attrs
+
             product = ProductDoc(
                 id=meta.get("product_id", ""),
                 name=meta.get("name", ""),
@@ -171,7 +199,7 @@ def hybrid_search(
                 unit_price=float(meta.get("unit_price", 0)),
                 sale_price=meta.get("sale_price"),
                 in_stock=bool(meta.get("in_stock", True)),
-                attributes=meta.get("attributes"),
+                attributes=attrs,
                 collection_source=collection_name,
                 chunk_text=chunk_text,
                 composite_score=composite,

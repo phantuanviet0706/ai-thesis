@@ -1,9 +1,10 @@
-from sqlalchemy import Column, BigInteger, String, Boolean, ForeignKey, Index
+from sqlalchemy import Column, BigInteger, String, Boolean, DateTime, ForeignKey, Index
+from sqlalchemy.sql import func
 
-from entity.base_model import Base, TimestampMixin
+from entity.base_model import Base
 
 
-class UserAddress(Base, TimestampMixin):
+class UserAddress(Base):
     """User address for multi-address checkout"""
     __tablename__ = 'UserAddresses'
     
@@ -19,7 +20,8 @@ class UserAddress(Base, TimestampMixin):
     district = Column(String(100))
     province = Column(String(100), nullable=False)
     is_default = Column(Boolean, default=False)
-    
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
     __table_args__ = (
         Index('idx_address_user', 'user_id'),
         Index('idx_address_default', 'user_id', 'is_default'),

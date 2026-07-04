@@ -1,9 +1,10 @@
-from sqlalchemy import Column, BigInteger, String, Index, JSON
+from sqlalchemy import Column, BigInteger, String, DateTime, Index, JSON
+from sqlalchemy.sql import func
 
-from entity.base_model import Base, TimestampMixin
+from entity.base_model import Base
 
 
-class AuditLog(Base, TimestampMixin):
+class AuditLog(Base):
     """Append-only audit logs (never update or delete)"""
     __tablename__ = 'AuditLogs'
 
@@ -17,7 +18,7 @@ class AuditLog(Base, TimestampMixin):
     new_value = Column(JSON)
     ip_address = Column(String(45))
     user_agent = Column(String(500))
-
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     __table_args__ = (
         Index('idx_audit_actor', 'actor_id'),

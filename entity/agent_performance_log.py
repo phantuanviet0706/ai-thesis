@@ -1,9 +1,10 @@
-from sqlalchemy import Column, BigInteger, String, Integer, ForeignKey, Index, JSON, DECIMAL
+from sqlalchemy import Column, BigInteger, String, Integer, ForeignKey, Index, JSON, DECIMAL, DateTime
+from sqlalchemy.sql import func
 
-from entity.base_model import Base, TimestampMixin
+from entity.base_model import Base
 
 
-class AgentPerformanceLog(Base, TimestampMixin):
+class AgentPerformanceLog(Base):
     """Agent performance logs (latency, tokens, retrieval metrics)"""
     __tablename__ = 'AgentPerformanceLogs'
 
@@ -18,7 +19,7 @@ class AgentPerformanceLog(Base, TimestampMixin):
     retrieval_score = Column(DECIMAL(5, 4))
     retrieved_product_ids = Column(JSON)
     error_message = Column(String(500))
-
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     __table_args__ = (
         Index('idx_perf_session', 'session_id'),

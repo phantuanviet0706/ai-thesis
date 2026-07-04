@@ -5,12 +5,49 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8ba4c288-c751-43f1-b8dc-12c4c41593f0" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/resources/prompt/extraction_agent.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.env.example" beforeDir="false" afterPath="$PROJECT_DIR$/.env.example" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/kr_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/kr_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/orchestrator.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/orchestrator.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/psych_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/psych_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/agents/synth_agent.py" beforeDir="false" afterPath="$PROJECT_DIR$/agents/synth_agent.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/constants/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/constants/constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/constants/securities.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/core/security.py" beforeDir="false" afterPath="$PROJECT_DIR$/core/security.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/checkpoints.db" beforeDir="false" afterPath="$PROJECT_DIR$/data/checkpoints.db" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data/checkpoints.db-shm" beforeDir="false" afterPath="$PROJECT_DIR$/data/checkpoints.db-shm" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/checkpoints.db-wal" beforeDir="false" afterPath="$PROJECT_DIR$/data/checkpoints.db-wal" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database.sql" beforeDir="false" afterPath="$PROJECT_DIR$/database.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/database/vector_db_manager.py" beforeDir="false" afterPath="$PROJECT_DIR$/database/vector_db_manager.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/agent_performance_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/agent_performance_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/api_key.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/api_key.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/audit_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/audit_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/conversation_message.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/conversation_message.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/conversation_session.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/conversation_session.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/order_item.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/order_item.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/payment.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/payment.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/product_image.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/product_image.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/psych_state_log.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/psych_state_log.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/tag.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/tag.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/entity/user_address.py" beforeDir="false" afterPath="$PROJECT_DIR$/entity/user_address.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/exceptions/global_exception_handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/exceptions/global_exception_handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graph/graph.py" beforeDir="false" afterPath="$PROJECT_DIR$/graph/graph.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graph/router.py" beforeDir="false" afterPath="$PROJECT_DIR$/graph/router.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/graph/state.py" beforeDir="false" afterPath="$PROJECT_DIR$/graph/state.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.in" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/migrate/01_brands_categories_tags.sql" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/seed.sql" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/messaging/handler.py" beforeDir="false" afterPath="$PROJECT_DIR$/messaging/handler.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/repositories/conversation_repository.py" beforeDir="false" afterPath="$PROJECT_DIR$/repositories/conversation_repository.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/migrate/seed.sql" beforeDir="false" afterPath="$PROJECT_DIR$/resources/migrate/seed.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/prompt/orchestrator_agent.md" beforeDir="false" afterPath="$PROJECT_DIR$/resources/prompt/orchestrator_agent.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/prompt/synth_agent.md" beforeDir="false" afterPath="$PROJECT_DIR$/resources/prompt/synth_agent.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/resources/summary.md" beforeDir="false" afterPath="$PROJECT_DIR$/resources/summary.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/retrieval/embeddings.py" beforeDir="false" afterPath="$PROJECT_DIR$/retrieval/embeddings.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/retrieval/hybrid_search.py" beforeDir="false" afterPath="$PROJECT_DIR$/retrieval/hybrid_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/schemas/auth_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/schemas/auth_schema.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/schemas/chat_schema.py" beforeDir="false" afterPath="$PROJECT_DIR$/schemas/chat_schema.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/chat_service.py" beforeDir="false" afterPath="$PROJECT_DIR$/services/chat_service.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,61 +75,61 @@
   </component>
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
-      <entry key="MS100" value="1.0000000000007236" />
-      <entry key="MS500" value="1.0040167798846233" />
-      <entry key="S2" value="1.4061168828888353" />
-      <entry key="S5" value="2.5444663978111026" />
-      <entry key="S10" value="3.97549345794209" />
-      <entry key="S30" value="6.131142066040186" />
-      <entry key="S60" value="6.973412823626172" />
-      <entry key="M2" value="7.460999183513555" />
-      <entry key="M5" value="7.777850021401651" />
-      <entry key="M10" value="7.8877999816965305" />
-      <entry key="M15" value="7.924947439969924" />
-      <entry key="M30" value="7.962346804247507" />
-      <entry key="H1" value="7.981141552234495" />
-      <entry key="H2" value="7.990563290388648" />
-      <entry key="H4" value="8.00055736119058" />
-      <entry key="D1" value="34.41809900015742" />
-      <entry key="W1" value="133.37552909208557" />
+      <entry key="MS100" value="1.1108243820653212" />
+      <entry key="MS500" value="2.0649916150943897" />
+      <entry key="S2" value="2.8942858395491653" />
+      <entry key="S5" value="4.019510446127937" />
+      <entry key="S10" value="5.6024909381465" />
+      <entry key="S30" value="8.345141386414364" />
+      <entry key="S60" value="9.51338763082636" />
+      <entry key="M2" value="10.211269549998391" />
+      <entry key="M5" value="10.672786326836542" />
+      <entry key="M10" value="10.834366641539544" />
+      <entry key="M15" value="10.889121844950283" />
+      <entry key="M30" value="10.944331552656523" />
+      <entry key="H1" value="10.97210816752343" />
+      <entry key="H2" value="10.98604013976633" />
+      <entry key="H4" value="10.998292704800788" />
+      <entry key="D1" value="37.416499733513334" />
+      <entry key="W1" value="136.37464679825968" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="0.0" />
-      <entry key="MS500" value="0.0" />
-      <entry key="S2" value="0.0" />
-      <entry key="S5" value="0.0" />
-      <entry key="S10" value="0.0" />
-      <entry key="S30" value="0.0" />
-      <entry key="S60" value="0.0" />
-      <entry key="M2" value="0.0" />
-      <entry key="M5" value="4.480727575950858E-221" />
-      <entry key="M10" value="2.488061714433681E-110" />
-      <entry key="M15" value="2.050881458930262E-73" />
-      <entry key="M30" value="1.693116472738126E-36" />
-      <entry key="H1" value="4.868177996163557E-18" />
-      <entry key="H2" value="8.27782062727081E-9" />
-      <entry key="H4" value="3.4475416416291255E-4" />
-      <entry key="D1" value="2.5122798876143295" />
-      <entry key="W1" value="11.617709084335758" />
+      <entry key="MS100" value="1.8962341725293653E-12" />
+      <entry key="MS500" value="0.004524581274197824" />
+      <entry key="S2" value="0.25935498414140284" />
+      <entry key="S5" value="0.5828513938269477" />
+      <entry key="S10" value="0.7634470471663034" />
+      <entry key="S30" value="0.9139581429495144" />
+      <entry key="S60" value="0.9560115809703951" />
+      <entry key="M2" value="0.9777584471485762" />
+      <entry key="M5" value="0.9910433019462608" />
+      <entry key="M10" value="0.9955115780071372" />
+      <entry key="M15" value="0.9970054757574559" />
+      <entry key="M30" value="0.998501615300374" />
+      <entry key="H1" value="0.9992505267951444" />
+      <entry key="H2" value="0.9996252014307154" />
+      <entry key="H4" value="1.000157237523742" />
+      <entry key="D1" value="3.5121324582751705" />
+      <entry key="W1" value="12.61762786203802" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="0.0246887909963692" />
-      <entry key="MS500" value="0.4808994980671222" />
-      <entry key="S2" value="1.2348662997018645" />
-      <entry key="S5" value="2.4695008849717026" />
-      <entry key="S10" value="3.9354204240894446" />
-      <entry key="S30" value="6.116555217449402" />
-      <entry key="S60" value="6.965877624691124" />
-      <entry key="M2" value="7.457161156899084" />
-      <entry key="M5" value="7.776296430520264" />
-      <entry key="M10" value="7.887019990345189" />
-      <entry key="M15" value="7.924426725359929" />
-      <entry key="M30" value="7.962086084176021" />
-      <entry key="H1" value="7.981011101020295" />
-      <entry key="H2" value="7.990498050198371" />
-      <entry key="H4" value="8.000869390402146" />
-      <entry key="D1" value="36.930253296516135" />
-      <entry key="W1" value="144.99315642571204" />
+      <entry key="MS100" value="0.9120642355956903" />
+      <entry key="MS500" value="1.964476949968536" />
+      <entry key="S2" value="2.969752751353817" />
+      <entry key="S5" value="4.419405180442593" />
+      <entry key="S10" value="6.237928193185214" />
+      <entry key="S30" value="9.204849750672636" />
+      <entry key="S60" value="10.44049340245854" />
+      <entry key="M2" value="11.174096888327412" />
+      <entry key="M5" value="11.657737721743235" />
+      <entry key="M10" value="11.8268119418089" />
+      <entry key="M15" value="11.884078587564249" />
+      <entry key="M30" value="11.941806519434964" />
+      <entry key="H1" value="11.970844798069948" />
+      <entry key="H2" value="11.985408249882365" />
+      <entry key="H4" value="11.998321265876744" />
+      <entry key="D1" value="40.92849060998787" />
+      <entry key="W1" value="148.99219062486353" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -106,35 +143,37 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;FastAPI.main.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python.constants.executor&quot;: &quot;Run&quot;,
-    &quot;Python.graph.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.user_profile.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultAutoModeForALLUsers.v1&quot;: &quot;true&quot;,
-    &quot;com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;junie.onboarding.icon.badge.shown&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;D:/project/learning/thesis&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;,
-    &quot;to.speed.mode.migration.done&quot;: &quot;true&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "FastAPI.main.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.constants.executor": "Run",
+    "Python.graph.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.reset_conversation_data.executor": "Run",
+    "Python.seed_vectordb.executor": "Run",
+    "Python.user_profile.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultAutoModeForALLUsers.v1": "true",
+    "com.intellij.ml.llm.matterhorn.ej.ui.settings.DefaultModelSelectionForGA.v1": "true",
+    "git-widget-placeholder": "main",
+    "junie.onboarding.icon.badge.shown": "true",
+    "last_opened_file_path": "D:/project/learning/thesis",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.pluginManager",
+    "to.speed.mode.migration.done": "true",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="D:\project\learning\thesis" />
@@ -150,7 +189,57 @@
       <recent name="D:\ext_project\ai-thesis\entity" />
     </key>
   </component>
-  <component name="RunManager">
+  <component name="RunManager" selected="FastAPI.main">
+    <configuration name="reset_conversation_data" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="thesis" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scripts" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/reset_conversation_data.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="seed_vectordb" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="thesis" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/scripts" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="DEBUG_JUST_MY_CODE" value="false" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="RUN_TOOL" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/seed_vectordb.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="main" type="Python.FastAPI">
       <option name="file" value="D:\project\learning\thesis\main.py" />
       <module name="thesis" />
@@ -169,6 +258,12 @@
       <option name="launchJavascriptDebuger" value="false" />
       <method v="2" />
     </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.reset_conversation_data" />
+        <item itemvalue="Python.seed_vectordb" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SharedIndexes">
     <attachedChunks>
@@ -193,7 +288,8 @@
       <workItem from="1781296952014" duration="37106000" />
       <workItem from="1781887535115" duration="1975000" />
       <workItem from="1782308368368" duration="607000" />
-      <workItem from="1782569227479" duration="5896000" />
+      <workItem from="1782569227479" duration="45992000" />
+      <workItem from="1783151184121" duration="16880000" />
     </task>
     <servers />
   </component>
@@ -205,7 +301,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/main.py</url>
-          <line>27</line>
+          <line>30</line>
           <option name="timeStamp" value="2" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
@@ -222,8 +318,10 @@
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/thesis$constants.coverage" NAME="constants Coverage Results" MODIFIED="1781105044730" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/common" />
-    <SUITE FILE_PATH="coverage/thesis$main.coverage" NAME="main Coverage Results" MODIFIED="1782582035676" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/thesis$main.coverage" NAME="main Coverage Results" MODIFIED="1783188990465" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/thesis$user_profile.coverage" NAME="user_profile Coverage Results" MODIFIED="1781105406407" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/entity" />
+    <SUITE FILE_PATH="coverage/thesis$reset_conversation_data.coverage" NAME="reset_conversation_data Coverage Results" MODIFIED="1783182120495" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
     <SUITE FILE_PATH="coverage/thesis$graph.coverage" NAME="graph Coverage Results" MODIFIED="1781105160153" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/graph" />
+    <SUITE FILE_PATH="coverage/thesis$seed_vectordb.coverage" NAME="seed_vectordb Coverage Results" MODIFIED="1783179854320" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/scripts" />
   </component>
 </project>

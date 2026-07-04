@@ -7,14 +7,15 @@ from sqlalchemy.orm import Session, sessionmaker
 from core.config import settings
 
 DATABASE_URL = (
-    f"postgresql+psycopg2://{settings.PG_USER}:{settings.PG_PASSWORD}"
-    f"@{settings.PG_HOST}:{settings.PG_PORT}/{settings.PG_NAME}"
+    f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}"
+    f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+    f"?charset=utf8mb4"
 )
 
 engine = create_engine(
     DATABASE_URL,
-    pool_size=settings.PG_POOL_SIZE,
-    max_overflow=settings.PG_MAX_OVERFLOW,
+    pool_size=settings.DB_POOL_SIZE,
+    max_overflow=settings.DB_MAX_OVERFLOW,
     pool_pre_ping=True,
     echo=False,
 )
@@ -33,3 +34,10 @@ def get_db() -> Generator[Session, Any, None]:
         raise
     finally:
         db.close()
+
+
+def init_db() -> None:
+    """Tạo tất cả bảng từ ORM models nếu chưa tồn tại."""
+    from entity.base_model import Base
+    import entity  # noqa: F401 — đăng ký tất cả ORM models với Base metadata
+    Base.metadata.create_all(bind=engine)

@@ -9,7 +9,7 @@ from constants.constants import (
 from core.config import settings
 from core.logger import custom_logger
 
-_COLLECTION_METADATA = {"hnsw:space": "cosine", "hnsw:M": 16, "hnsw:ef_construction": 200}
+_COLLECTION_METADATA = {"hnsw:space": "cosine"}
 
 
 class VectorDBManager:
@@ -31,11 +31,24 @@ class VectorDBManager:
 
     def get_collection(self, name: str) -> Collection:
         """
-        @desc Lấy collection hiện có hoặc tạo mới collection trong ChromaDB theo tên
+        @desc Lấy collection hiện có hoặc tạo mới collection trong ChromaDB theo tên.
+        Nếu metadata HNSW cũ bị conflict (vd: đổi embedding model), tự động xóa và tạo lại.
         @params name (str): Tên của collection cần lấy hoặc tạo mới
         @return Collection: Đối tượng collection ChromaDB tương ứng
         """
-        return self.client.get_or_create_collection(name=name, metadata=_COLLECTION_METADATA)
+        try:
+            return self.client.get_or_create_collection(name=name, metadata=_COLLECTION_METADATA)
+        except Exception as e:
+            if "hnsw" in str(e).lower() or "segment" in str(e).lower() or "parse" in str(e).lower():
+                custom_logger.warning(
+                    f"[VectorDB] collection '{name}' has stale HNSW metadata — resetting | error={e}"
+                )
+                try:
+                    self.client.delete_collection(name=name)
+                except Exception:
+                    pass
+                return self.client.create_collection(name=name, metadata=_COLLECTION_METADATA)
+            raise
 
     def get_all_collections(self) -> dict[str, Collection]:
         """

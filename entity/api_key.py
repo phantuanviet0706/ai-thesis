@@ -1,9 +1,10 @@
 from sqlalchemy import Column, BigInteger, String, Integer, Boolean, DateTime, ForeignKey, Index, JSON
+from sqlalchemy.sql import func
 
-from entity.base_model import Base, TimestampMixin, ActiveMixin
+from entity.base_model import Base, ActiveMixin
 
 
-class APIKey(Base, TimestampMixin, ActiveMixin):
+class APIKey(Base, ActiveMixin):
     """API Keys for retail partner integrations"""
     __tablename__ = 'APIKeys'
     
@@ -18,7 +19,8 @@ class APIKey(Base, TimestampMixin, ActiveMixin):
     is_active = Column(Boolean, default=True, index=True)
     last_used_at = Column(DateTime)
     expires_at = Column(DateTime)
-    
+    created_at = Column(DateTime, default=func.now(), nullable=False)
+
     __table_args__ = (
         Index('idx_apikey_hash', 'key_hash'),
         Index('idx_apikey_active', 'is_active'),

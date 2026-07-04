@@ -17,29 +17,10 @@ Multi-dimensional linguistic features analysed:
 Output governs how Synth Agent frames the final response (feedback loop).
 """
 
-import json
-import time
-from functools import lru_cache
-
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, SystemMessage
-
-from core.config import settings
+from agents.base_agent import BaseLLMAgent
 from core.logger import custom_logger
 from graph.state import ConversationState, PsychState
-from utils.helper import extract_json, read_file_contents
-
-_PSYCH_PROMPT = read_file_contents("resources/prompt/psych_agent.md")
-
-
-@lru_cache(maxsize=1)
-def _get_llm() -> ChatAnthropic:
-    return ChatAnthropic(
-        model=settings.ANTHROPIC_MODEL_FAST,
-        api_key=settings.ANTHROPIC_API_KEY,
-        temperature=0.0,
-        max_tokens=200,
-    )
+from utils.helper import extract_json
 
 
 def _format_conversation_history(messages: list, max_turns: int = 3) -> str:
@@ -57,33 +38,24 @@ def _format_conversation_history(messages: list, max_turns: int = 3) -> str:
     return "\n".join(lines) if lines else "(Chưa có lịch sử)"
 
 
-def psych_agent_node(state: ConversationState) -> dict:
-    """
-    @desc Node LangGraph của Psych Agent — phân tích trạng thái tâm lý khách hàng từ lịch sử hội thoại
-    @params state (ConversationState): Trạng thái hội thoại chứa lịch sử tin nhắn và metadata session
-    @return dict: State delta gồm psych_state, psych_confidence, primary_concern và consult_strategy
-    """
-    t0 = time.perf_counter()
-    msg_count = len(state.get("messages", []))
-    custom_logger.info(f"[Psych Agent] start | history_msgs={msg_count}")
+class PsychAgent(BaseLLMAgent):
+    prompt_path = "resources/prompt/psych_agent.md"
+    log_tag = "Psych Agent"
+    model_key = "FAST"
+    max_tokens = 500
 
-    conversation_text = _format_conversation_history(state.get("messages", []))
+    def build_user_prompt(self, state: ConversationState) -> str:
+        conversation_text = _format_conversation_history(state.get("messages", []))
+        return f"Lịch sử hội thoại:\n{conversation_text}"
 
-    response = _get_llm().invoke([
-        SystemMessage(content=_PSYCH_PROMPT),
-        HumanMessage(content=f"Lịch sử hội thoại:\n{conversation_text}"),
-    ])
-
-    psych_state = PsychState.CURIOUS
-    psych_confidence = 0.5
-    primary_concern = None
-    consult_strategy = "Tiếp tục tư vấn chung"
-
-    try:
-        parsed = extract_json(response.content)
+    def parse_response(self, raw_content: str, state: ConversationState) -> dict:
+        parsed = extract_json(raw_content)
         psych_state_raw = parsed.get("psych_state", "CURIOUS")
-        psych_state = PsychState(psych_state_raw) if psych_state_raw in PsychState._value2member_map_ else PsychState.CURIOUS
-        psych_confidence = float(parsed.get("psych_confidence", 0.5))
+        psych_state = (
+            PsychState(psych_state_raw) if psych_state_raw in PsychState._value2member_map_
+            else PsychState.CURIOUS
+        )
+        psych_confidence = float(parsed.get("psych_confidence", 0.65))
         primary_concern = parsed.get("primary_concern")
         consult_strategy = parsed.get("consult_strategy", "Tiếp tục tư vấn")
 
@@ -92,17 +64,24 @@ def psych_agent_node(state: ConversationState) -> dict:
             f"confidence={psych_confidence:.2f} | concern='{primary_concern}' | "
             f"strategy='{consult_strategy[:50]}'"
         )
-    except (json.JSONDecodeError, AttributeError, ValueError):
-        custom_logger.warning("[Psych Agent] JSON parse failed, using default CURIOUS state")
+        return {
+            "psych_state": psych_state,
+            "psych_confidence": psych_confidence,
+            "primary_concern": primary_concern,
+            "consult_strategy": consult_strategy,
+        }
 
-    latency = (time.perf_counter() - t0) * 1000
-    custom_logger.info(f"[Psych Agent] complete | {latency:.0f}ms")
+    def on_error(self, exc: Exception, state: ConversationState) -> dict:
+        # Không set error_state — Psych Agent tự phục hồi bằng fallback CURIOUS thay vì
+        # kích hoạt error_handler (giữ đúng hành vi gốc: JSON parse fail không phải lỗi
+        # nghiêm trọng, chỉ cần trạng thái tâm lý mặc định để hội thoại tiếp tục trôi chảy).
+        custom_logger.warning(f"[Psych Agent] failed, dùng fallback CURIOUS: {exc}")
+        return {
+            "psych_state": PsychState.CURIOUS,
+            "psych_confidence": 0.65,  # above 0.6 threshold — tránh Orchestrator loop lại
+            "primary_concern": None,
+            "consult_strategy": "Tiếp tục tư vấn chung",
+        }
 
-    return {
-        "psych_state": psych_state,
-        "psych_confidence": psych_confidence,
-        "primary_concern": primary_concern,
-        "consult_strategy": consult_strategy,
-        "next_node": "orchestrator",
-        "error_state": None,
-    }
+
+psych_agent_node = PsychAgent()

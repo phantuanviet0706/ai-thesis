@@ -6,7 +6,9 @@ Graph topology (thesis §3.3.2 + Figure):
   orchestrator →[conditional: next_node]→ kr_agent | psych_agent | synth_agent | error_handler | END
   kr_agent     →[normal]→ orchestrator   (sole control always returns here)
   psych_agent  →[normal]→ orchestrator   (sole control always returns here)
-  synth_agent  →[normal]→ END            (response generated, turn complete)
+  synth_agent  ┐
+               ├→[parallel fan-out]→ END  (chạy đồng thời — extraction không chặn response)
+  extraction_agent ┘
   error_handler→[normal]→ END
 
 Checkpointing: Redis Stack checkpointer (preferred) or AsyncSQLite fallback (persistent).
@@ -27,7 +29,9 @@ except ImportError:
     AsyncSqliteSaver = None
     _SQLITE_AVAILABLE = False
 
+from agents.extraction_agent import extraction_agent_node
 from agents.kr_agent import kr_agent_node
+from agents.order_lookup_node import order_lookup_node
 from agents.orchestrator import orchestrator_node
 from agents.psych_agent import psych_agent_node
 from agents.synth_agent import synth_agent_node
@@ -68,6 +72,8 @@ def _build_graph() -> StateGraph:
     graph.add_node("kr_agent", kr_agent_node)
     graph.add_node("psych_agent", psych_agent_node)
     graph.add_node("synth_agent", synth_agent_node)
+    graph.add_node("extraction_agent", extraction_agent_node)
+    graph.add_node("order_lookup", order_lookup_node)
     graph.add_node("error_handler", _error_handler_node)
 
     graph.add_edge(START, "orchestrator")
@@ -79,6 +85,8 @@ def _build_graph() -> StateGraph:
             "kr_agent": "kr_agent",
             "psych_agent": "psych_agent",
             "synth_agent": "synth_agent",
+            "extraction_agent": "extraction_agent",
+            "order_lookup": "order_lookup",
             "error_handler": "error_handler",
             END: END,
         },
@@ -86,7 +94,10 @@ def _build_graph() -> StateGraph:
 
     graph.add_edge("kr_agent", "orchestrator")
     graph.add_edge("psych_agent", "orchestrator")
+    # synth_agent và extraction_agent chạy song song (xem router.conditional_router) — cả hai đều kết thúc ở END
     graph.add_edge("synth_agent", END)
+    graph.add_edge("extraction_agent", END)
+    graph.add_edge("order_lookup", END)
     graph.add_edge("error_handler", END)
 
     return graph
@@ -147,7 +158,7 @@ async def compile_graph():
     @desc Biên dịch và trả về ứng dụng LangGraph hoàn chỉnh với checkpointing, nên gọi một lần khi khởi động
     @return CompiledGraph: Đồ thị đã được biên dịch với checkpointer, sẵn sàng xử lý yêu cầu
     """
-    custom_logger.info("[Graph] Compiling LangGraph application (5 nodes)...")
+    custom_logger.info("[Graph] Compiling LangGraph application (6 nodes)...")
     try:
         checkpointer = await _build_checkpointer()
         graph = _build_graph()

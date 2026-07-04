@@ -1,9 +1,10 @@
-from sqlalchemy import Column, BigInteger, String, Integer, Boolean, ForeignKey, Index
+from sqlalchemy import Column, BigInteger, String, Integer, Boolean, DateTime, ForeignKey, Index
+from sqlalchemy.sql import func
 
-from entity.base_model import Base, TimestampMixin
+from entity.base_model import Base
 
 
-class ProductImage(Base, TimestampMixin):
+class ProductImage(Base):
     """Product images with primary indicator and sort order"""
     __tablename__ = 'ProductImages'
 
@@ -14,6 +15,7 @@ class ProductImage(Base, TimestampMixin):
     alt_text = Column(String(255))
     sort_order = Column(Integer, default=0, nullable=False)
     is_primary = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
 
     __table_args__ = (

@@ -1,9 +1,10 @@
 from sqlalchemy import Column, BigInteger, String, DateTime, ForeignKey, Index, JSON, DECIMAL
+from sqlalchemy.sql import func
 
-from entity.base_model import Base, TimestampMixin
+from entity.base_model import Base
 
 
-class Payment(Base, TimestampMixin):
+class Payment(Base):
     """Payments with multiple attempts support"""
     __tablename__ = 'Payments'
 
@@ -16,7 +17,7 @@ class Payment(Base, TimestampMixin):
     status = Column(String(50), default='pending', nullable=False, index=True)  # pending, success, failed, refunded
     gateway_response = Column(JSON)
     paid_at = Column(DateTime)
-
+    created_at = Column(DateTime, default=func.now(), nullable=False)
 
     __table_args__ = (
         Index('idx_payment_order', 'order_id'),

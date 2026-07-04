@@ -76,7 +76,7 @@ def register_exception_handler(app: FastAPI):
         )
         error_code = ErrorCode.VALIDATION_ERROR
         return JSONResponse(
-            status_code=error_code.status_code,
+            status_code=error_code.http_status,
             content=ApiResponse(
                 code=error_code.code,
                 message=error_code.message,

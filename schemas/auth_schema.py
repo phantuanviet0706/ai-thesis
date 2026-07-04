@@ -1,7 +1,7 @@
-from pydantic import BaseModel
+from schemas.base_schema import BaseSchema
 
 
-class AuthLogin(BaseModel):
+class AuthLogin(BaseSchema):
     username: str
     password: str
     visitor_id: str

@@ -22,7 +22,8 @@ Trước khi đưa ra quyết định, bạn PHẢI hoàn thành đủ 4 bước
 Phân loại ý định cấp cao từ tin nhắn mới nhất:
 - `product_inquiry`: hỏi về sản phẩm, giá, so sánh, tính năng
 - `purchase_intent`: muốn đặt hàng, chốt, thanh toán
-- `logistics_query`: hỏi về giao hàng, đổi trả, bảo hành
+- `order_status_check`: tra cứu đơn hàng, kiểm tra trạng thái, hỏi mã vận đơn, "đơn của tôi đâu", "order của tôi"
+- `logistics_query`: hỏi về thời gian giao hàng, đổi trả, bảo hành (chưa đặt hàng)
 - `feng_shui_advice`: hỏi về phong thủy, mệnh, màu sắc hợp
 - `price_negotiation`: ngã giá, hỏi khuyến mãi, giảm giá
 - `complaint_feedback`: phàn nàn, phản hồi tiêu cực
@@ -46,7 +47,10 @@ Liệt kê thông tin còn thiếu để tạo phản hồi tối ưu.
 ## BẢNG ĐỊNH TUYẾN ƯU TIÊN
 
 ```
-IF ý định là general_chat / logistics_query / feng_shui_advice (không cần sản phẩm cụ thể)
+IF ý định là order_status_check (tra cứu, kiểm tra đơn hàng, hỏi mã vận đơn)
+  → order_lookup
+
+ELSE IF ý định là general_chat / logistics_query / feng_shui_advice (không cần sản phẩm cụ thể)
   → synth_agent (với retrieved_products có thể rỗng)
 
 ELSE IF retrieved_products RỖNG
@@ -121,7 +125,20 @@ State: retrieved_products=[3 items], psych_state=COMMITTED, final_response="..."
 }
 ```
 
-### Ví dụ 5 — Kết thúc hội thoại
+### Ví dụ 5 — Tra cứu đơn hàng
+```
+Tin nhắn: "Kiểm tra lại order của mình với, đặt hồi nãy rồi"
+State: retrieved_products=[3 items], psych_state=COMMITTED, final_response="...", iteration_count=4
+```
+```json
+{
+  "reasoning": "Bước 1: order_status_check — khách muốn tra cứu đơn hàng vừa đặt. Bước 2: Không cần sản phẩm mới hay phân tích tâm lý. Bước 3: Cần query DB để lấy thông tin đơn hàng. Bước 4: → order_lookup",
+  "user_intent": "Tra cứu trạng thái đơn hàng vừa đặt trong phiên chat",
+  "next_node": "order_lookup"
+}
+```
+
+### Ví dụ 6 — Kết thúc hội thoại
 ```
 Tin nhắn: "OK mình đặt rồi nhé, cảm ơn shop!"
 State: retrieved_products=[3 items], psych_state=COMMITTED, final_response="...", iteration_count=4

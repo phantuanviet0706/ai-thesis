@@ -1,16 +1,12 @@
 import hashlib
-import re
 
-from fastapi import Request, HTTPException, status
 from datetime import datetime, timedelta
 from typing import Optional
 
 from dotenv import load_dotenv
-from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt, ExpiredSignatureError
 from passlib.context import CryptContext
 
-from constants.securities import Securities
 from core.config import settings
 
 load_dotenv()
@@ -20,7 +16,6 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
 
 def get_vpid_hash(visitor_id: str) -> str:
     """
@@ -71,11 +66,9 @@ def decode_token(token: str) -> Optional[dict]:
     @return Optional[dict]: Dict payload nếu hợp lệ, -1 nếu token hết hạn, None nếu token không hợp lệ
     """
     try:
-        print(f"DEBUG - Thuật toán trong Config: {ALGORITHM}")
         payload = jwt.decode(token=token, key=SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except ExpiredSignatureError:
-        print("DEBUG: Token đã hết hạn (Expired)")
         return -1
     except JWTError:
         return None
@@ -96,47 +89,3 @@ def create_refresh_token(data: dict, visitor_id: str) -> str:
     to_encode.update({"exp": expire, "type": "refresh", "vpid": vpid_hash})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
-
-async def api_security_filter(request: Request):
-    """
-    @desc Middleware bảo mật API — kiểm tra JWT token trên mọi request, bỏ qua các endpoint trong danh sách trắng
-    @params request (Request): Đối tượng HTTP request từ FastAPI cần được xác thực
-    @return dict: Payload đã giải mã nếu token hợp lệ; ném HTTPException 401 nếu thiếu hoặc token không hợp lệ
-    """
-    method = request.method.upper()
-    path = request.url.path
-
-    matchers = Securities.SECURITY_MATCHERS.get(method, [])
-    for pattern in matchers:
-        if re.match(f"^{pattern}$", path):
-            print(f"DEBUG: {path} matches whitelist pattern {pattern}")
-            return
-
-    try:
-        token = await oauth2_scheme(request)
-    except Exception:
-        token = None
-
-    if not token:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Full authentication is required to access this resource",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    payload = decode_token(token)
-    if payload == -1:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    if payload is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Full authentication is required to access this resource",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    return payload

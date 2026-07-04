@@ -382,7 +382,7 @@ CREATE TABLE IF NOT EXISTS ConversationSessions (
 
     -- Snapshot of final ConversationState fields (avoid hitting Redis for analytics)
     final_psych_state     VARCHAR(50),
-    final_consult_strategy VARCHAR(100),
+    final_consult_strategy TEXT,
     total_turns           INT NOT NULL DEFAULT 0,
     iteration_count       INT NOT NULL DEFAULT 0,
 
@@ -435,7 +435,7 @@ CREATE TABLE IF NOT EXISTS PsychStateLogs (
     psych_state      VARCHAR(50)   NOT NULL,          -- HESITATION | INTEREST | READY_TO_BUY | …
     confidence_score DECIMAL(4,3)  NOT NULL,           -- 0.000–1.000
     primary_concern  VARCHAR(255),
-    consult_strategy VARCHAR(100),
+    consult_strategy VARCHAR(500),
     raw_output       JSON,                             -- full Psych Agent JSON output
 
     created_at       DATETIME(6) DEFAULT CURRENT_TIMESTAMP(6),

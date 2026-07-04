@@ -1,5 +1,6 @@
 from datetime import datetime
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from core.logger import custom_logger
@@ -34,22 +35,40 @@ class ConversationRepository:
             .first()
         )
         if session is None:
-            session = ConversationSession(
-                thread_id=thread_id,
-                user_id=user_id,
-                channel=channel,
-                status="active",
-                total_turns=0,
-                iteration_count=0,
-                started_at=datetime.utcnow(),
-                last_active_at=datetime.utcnow(),
-            )
-            self.db.add(session)
-            self.db.flush()
-            custom_logger.info(
-                f"[ConvRepo] New session created | thread_id={thread_id} | "
-                f"channel={channel} | user_id={user_id}"
-            )
+            try:
+                # Savepoint — nếu concurrent task tạo session cùng lúc, chỉ rollback savepoint này
+                with self.db.begin_nested():
+                    session = ConversationSession(
+                        thread_id=thread_id,
+                        user_id=user_id,
+                        channel=channel,
+                        status="active",
+                        total_turns=0,
+                        iteration_count=0,
+                        started_at=datetime.utcnow(),
+                        last_active_at=datetime.utcnow(),
+                    )
+                    self.db.add(session)
+                custom_logger.info(
+                    f"[ConvRepo] New session created | thread_id={thread_id} | "
+                    f"channel={channel} | user_id={user_id}"
+                )
+            except IntegrityError:
+                # Race condition: session đã được tạo bởi concurrent task.
+                # Dùng SELECT ... FOR UPDATE (locking read) thay vì SELECT thường —
+                # dưới REPEATABLE READ (mặc định MySQL), transaction này vẫn giữ
+                # snapshot từ trước khi task kia insert, nên SELECT thường sẽ vẫn
+                # trả về None dù bản ghi đã được commit. Locking read buộc đọc
+                # bản ghi mới nhất đã commit (đợi lock nếu task kia chưa commit).
+                session = (
+                    self.db.query(ConversationSession)
+                    .filter_by(thread_id=thread_id)
+                    .with_for_update()
+                    .first()
+                )
+                custom_logger.debug(
+                    f"[ConvRepo] Race condition on insert — recovered existing session | thread_id={thread_id}"
+                )
         else:
             custom_logger.debug(
                 f"[ConvRepo] Existing session recovered | thread_id={thread_id} | "

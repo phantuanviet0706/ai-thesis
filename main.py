@@ -4,12 +4,15 @@ from contextlib import asynccontextmanager
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from adapter.setup import setup_adapters
 from api.api_router import api_router
 from core.config import settings
 from core.logger import custom_logger
+from database import get_db, init_db
 from database.database import DBManager
+from database.vector_db_manager import VectorDBManager
 import database.mysql_manager  # noqa: F401 — registers MySQLManager via @DBManager.register_manager
 from exceptions.global_exception_handler import register_exception_handler
 from graph.graph import get_compiled_graph
@@ -26,15 +29,17 @@ _bot_consumer = BotMessageConsumer()
 async def lifespan(app: FastAPI):
     # 1. Databases
     DBManager.init_all()
+    init_db()
     custom_logger.info("Databases initialized.")
 
-    # 2. LangGraph graph (pre-warm)
+    # 2. LangGraph graph (pre-warm) — critical: nếu fail thì không thể serve request nào
     custom_logger.info("Initializing Pancharm MAS — pre-warming LangGraph graph...")
     try:
         await get_compiled_graph()
         custom_logger.info("LangGraph graph compiled and ready.")
     except Exception as exc:
-        custom_logger.warning(f"Graph pre-warm failed (non-fatal): {exc}")
+        custom_logger.error(f"LangGraph graph compilation failed — cannot serve requests: {exc}", exc_info=True)
+        raise RuntimeError(f"LangGraph startup failed: {exc}") from exc
 
     # 3. Platform adapters (register bots + webhook URLs)
     await setup_adapters()
@@ -95,5 +100,24 @@ def root():
 
 
 @app.get("/health")
-def health_check():
-    return {"status": "healthy"}
+async def health_check():
+    """Readiness probe — kiểm tra kết nối thực tế MySQL và ChromaDB."""
+    checks: dict[str, str] = {}
+
+    # MySQL
+    try:
+        with get_db() as db:
+            db.execute(text("SELECT 1"))
+        checks["mysql"] = "ok"
+    except Exception as exc:
+        checks["mysql"] = f"fail: {type(exc).__name__}"
+
+    # ChromaDB
+    try:
+        VectorDBManager().client.heartbeat()
+        checks["chromadb"] = "ok"
+    except Exception as exc:
+        checks["chromadb"] = f"fail: {type(exc).__name__}"
+
+    status = "healthy" if all(v == "ok" for v in checks.values()) else "degraded"
+    return {"status": status, "checks": checks}

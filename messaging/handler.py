@@ -50,7 +50,11 @@ async def handle_message(std_msg: StandardMessage) -> None:
         channel=platform,
     )
     response = await _chat_service.handle_chat(request)
-    await adapter.send_message(std_msg.sender_id, response.response)
+    reply_text = response.response or (
+        "Xin lỗi, hiện tại Pancharm chưa tìm được thông tin phù hợp với yêu cầu của bạn. "
+        "Bạn có thể mô tả thêm hoặc thử câu hỏi khác nhé! 🙏"
+    )
+    await adapter.send_message(std_msg.sender_id, reply_text)
 
     custom_logger.info(
         f"[handler] done | {platform}:{bot_name} | "
