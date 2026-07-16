@@ -34,11 +34,18 @@ async def handle_message(std_msg: StandardMessage) -> None:
         )
         return
 
-    cmd = std_msg.message.strip().lower()
+    # Lấy token đầu tiên và bỏ hậu tố "@botname" — Telegram thường gửi "/reset@ten_bot"
+    # khi lệnh được chọn từ menu command (đặc biệt trong group chat), nên so sánh
+    # nguyên văn "== '/reset'" sẽ KHÔNG khớp và lệnh bị rơi xuống luồng chat bình thường.
+    raw = std_msg.message.strip()
+    cmd = raw.split()[0].lower().split("@")[0] if raw else ""
     if cmd == "/start":
         await adapter.on_start_command(std_msg.sender_id)
         return
     if cmd == "/reset":
+        # Xóa thật checkpoint LangGraph của đúng session này trước khi báo cho khách —
+        # trước đây on_reset_command chỉ gửi tin nhắn xác nhận mà không xóa gì cả.
+        await _chat_service.reset_session(std_msg.session_key)
         await adapter.on_reset_command(std_msg.sender_id)
         return
 
@@ -55,6 +62,11 @@ async def handle_message(std_msg: StandardMessage) -> None:
         "Bạn có thể mô tả thêm hoặc thử câu hỏi khác nhé! 🙏"
     )
     await adapter.send_message(std_msg.sender_id, reply_text)
+
+    # Gửi ảnh sản phẩm SAU tin nhắn text — response.image_urls chỉ có dữ liệu khi khách
+    # yêu cầu xem ảnh ở lượt này (xem ChatService._resolve_product_images)
+    if response.image_urls:
+        await adapter.send_photos(std_msg.sender_id, response.image_urls)
 
     custom_logger.info(
         f"[handler] done | {platform}:{bot_name} | "

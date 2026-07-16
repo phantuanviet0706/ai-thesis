@@ -14,7 +14,7 @@ from core.logger import custom_logger
 from graph.state import ConversationState
 from retrieval.graph_rag import enrich_query
 from retrieval.hybrid_search import hybrid_search
-from utils.helper import extract_json
+from utils.helper import extract_json, format_customer_profile
 
 
 def _last_human_text(messages: list) -> str:
@@ -47,7 +47,10 @@ class KRAgent(BaseLLMAgent):
             if lines:
                 context_block = "Ngữ cảnh hội thoại trước:\n" + "\n".join(lines) + "\n\n"
 
-        return f"{context_block}Câu hỏi mới nhất: {query}"
+        profile_line = format_customer_profile(state.get("extracted_info"))
+        profile_block = f"{profile_line}\n\n" if profile_line else ""
+
+        return f"{context_block}{profile_block}Câu hỏi mới nhất: {query}"
 
     def parse_response(self, raw_content: str, state: ConversationState) -> dict:
         messages = state.get("messages", [])

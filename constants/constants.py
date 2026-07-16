@@ -13,6 +13,11 @@ LAMBDA_META = 0.20
 # Nếu catalog mở rộng >1000 SKU, cân nhắc giảm xuống 0.6 để tăng diversity
 MMR_LAMBDA = 0.7
 
+# Popularity boost cho sản phẩm "hot" (attributes.is_hot) — cộng thêm ngoài trọng số
+# dense/sparse/meta đã tune sẵn, chỉ đủ để phá tie giữa các sản phẩm có độ liên quan
+# xấp xỉ nhau, KHÔNG đủ lớn để một sản phẩm hot nhưng lạc đề vượt lên sản phẩm liên quan hơn.
+POPULARITY_BOOST = 0.05
+
 # TOP_K_INITIAL=20: đủ candidates cho BM25 re-rank, không quá lớn để tránh noise
 # TOP_K_FINAL=5: giới hạn context Synth Agent (~150 tokens/product × 5 = ~750 tokens)
 TOP_K_INITIAL = 20

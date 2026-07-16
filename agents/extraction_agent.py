@@ -27,13 +27,27 @@ def _format_messages_for_extraction(state: ConversationState) -> str:
     return "\n".join(lines) if lines else "(trống)"
 
 
-def _format_products_for_context(state: ConversationState) -> str:
-    products = state.get("retrieved_products", [])
+def _format_product_list(products: list) -> str:
     if not products:
-        return "(không có sản phẩm)"
+        return "(không có)"
     return "\n".join(
         f"ID={p.id} | {p.name} | {p.unit_price:,.0f}₫"
         for p in products[:5]
+    )
+
+
+def _format_products_for_context(state: ConversationState) -> str:
+    """
+    @desc Định dạng sản phẩm thành 2 nhóm tách biệt — lượt hiện tại và lượt trước — để LLM
+    resolve đúng selected_product_ids khi khách dùng tham chiếu kiểu "mẫu còn lại"/"cái kia"/
+    "sản phẩm thứ 2" trỏ tới thứ đã được gợi ý ở LƯỢT TRƯỚC, không phải kết quả tìm kiếm mới
+    (có thể không liên quan) của lượt hiện tại.
+    """
+    current = state.get("retrieved_products", [])
+    previous = state.get("previous_turn_products", [])
+    return (
+        f"Sản phẩm tìm được LƯỢT NÀY:\n{_format_product_list(current)}\n\n"
+        f"Sản phẩm đã gợi ý LƯỢT TRƯỚC:\n{_format_product_list(previous)}"
     )
 
 
@@ -49,7 +63,7 @@ class ExtractionAgent(BaseLLMAgent):
         psych_state = state.get("psych_state", PsychState.CURIOUS)
         return (
             f"Lịch sử hội thoại:\n{conv_text}\n\n"
-            f"Sản phẩm đã tư vấn:\n{products_text}\n\n"
+            f"{products_text}\n\n"
             f"Trạng thái tâm lý hiện tại: {psych_state}"
         )
 
@@ -58,10 +72,17 @@ class ExtractionAgent(BaseLLMAgent):
         custom_logger.info(
             f"[Extraction] done | outcome={extracted.get('conversion_outcome')} | "
             f"order_intent={extracted.get('order_intent')} | "
+            f"wants_image={extracted.get('wants_product_image')} | "
             f"has_phone={bool(extracted.get('customer_phone'))} | "
             f"has_name={bool(extracted.get('customer_name'))}"
         )
-        return {"extracted_info": extracted}
+        return {
+            "extracted_info": extracted,
+            # Snapshot retrieved_products của LƯỢT NÀY để lượt sau dùng làm "previous_turn_products"
+            # — phải ghi ở ĐÂY (sau khi build_user_prompt của lượt này đã đọc xong giá trị cũ),
+            # không ghi ở kr_agent.py vì retrieved_products bị reset về [] mỗi lượt trước khi graph chạy.
+            "previous_turn_products": state.get("retrieved_products", []),
+        }
 
     def on_error(self, exc: Exception, state: ConversationState) -> dict:
         # Không set error_state — extraction là side-channel (ghi log/CRM), lỗi ở đây

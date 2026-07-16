@@ -24,3 +24,7 @@ class ChatResponse(BaseSchema):
     retrieved_product_count: int = 0
     latency_ms: float
     iteration_count: int = 0
+    image_urls: list[str] = Field(
+        default_factory=list,
+        description="URL ảnh sản phẩm cần gửi kèm — có dữ liệu khi khách yêu cầu xem ảnh ở lượt này"
+    )

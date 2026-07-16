@@ -15,6 +15,7 @@ class ProductDoc(BaseModel):
     sale_price: Optional[float] = None
     in_stock: bool = True
     attributes: Optional[dict[str, Any]] = None
+    is_hot: bool = Field(default=False, description="Bestseller/trending flag from attributes.is_hot")
     collection_source: str = Field(description="Which ChromaDB collection this came from")
     chunk_text: str = Field(description="The raw chunk text that was retrieved")
     composite_score: float = Field(default=0.0, description="Final hybrid search score")

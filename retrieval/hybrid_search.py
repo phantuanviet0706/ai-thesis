@@ -11,6 +11,7 @@ from constants.constants import (
     LAMBDA_SPARSE,
     LAMBDA_META,
     MMR_LAMBDA,
+    POPULARITY_BOOST,
     TOP_K_INITIAL,
     TOP_K_FINAL,
 )
@@ -55,43 +56,105 @@ def _bm25_scores(query_tokens: list[str], corpus: list[list[str]]) -> list[float
     return [float(s / max_score) for s in raw]
 
 
+# KR Agent phát ra filter key "price" (xem resources/prompt/kr_agent.md) nhưng field thật trong
+# metadata Chroma là "unit_price" (xem scripts/seed_vectordb.py::_product_meta) — không map lại thì
+# metadata.get("price") luôn None, khiến điều kiện giá bị bỏ qua hoàn toàn trong _meta_score/_passes_hard_filters
+# (bug cũ: filter giá coi như không tồn tại, sản phẩm sai giá vẫn lọt vào kết quả).
+_FILTER_KEY_TO_METADATA_FIELD = {"price": "unit_price"}
+
+# category/price/element (mệnh) là các tiêu chí khách thường nêu RÕ RÀNG (xem
+# resources/prompt/synth_agent.md nguyên tắc #2 "BÁM SÁT ĐÚNG TIÊU CHÍ") — phải lọc CỨNG (loại
+# hẳn), không cho điểm 1 phần như trước, để không có sản phẩm sai danh mục/lệch giá/khác mệnh
+# lọt vào top-k gợi ý cho khách.
+_HARD_FILTER_KEYS = ("category", "price", "element")
+
+
+def _check_element_condition(value: str, condition: Any) -> bool:
+    """
+    @desc So khớp mệnh ngũ hành kiểu "chứa trong" — field attributes.element trong dữ liệu có thể
+    là 1 mệnh đơn ("Kim") hoặc nhiều mệnh cách nhau bởi dấu phẩy ("Kim, Thổ", thứ tự không cố định),
+    nên không thể so bằng $eq nguyên chuỗi — phải kiểm tra mệnh khách nêu có nằm trong danh sách đó không.
+    @params value (str): Giá trị element thô từ metadata, vd "Kim, Thổ"
+    @params condition (Any): Điều kiện lọc, dạng {"$eq": "Kim"} hoặc chuỗi "Kim"
+    @return bool: True nếu mệnh khách nêu nằm trong danh sách mệnh của sản phẩm
+    """
+    threshold = condition.get("$eq") if isinstance(condition, dict) else condition
+    if not threshold:
+        return False
+    wanted = str(threshold).strip().lower()
+    parts = [p.strip().lower() for p in str(value).split(",")]
+    return wanted in parts
+
+
+def _check_condition(value: Any, condition: Any) -> bool:
+    """
+    @desc Kiểm tra 1 giá trị metadata có thỏa 1 điều kiện filter không (hỗ trợ $eq/$lte/$gte hoặc so sánh trực tiếp)
+    @params value (Any): Giá trị thực tế lấy từ metadata
+    @params condition (Any): Điều kiện lọc — dict {"$eq"/"$lte"/"$gte": threshold} hoặc giá trị so sánh trực tiếp
+    @return bool: True nếu giá trị thỏa điều kiện
+    """
+    if isinstance(condition, dict):
+        op, threshold = next(iter(condition.items()))
+        try:
+            if op == "$eq":
+                return str(value).strip().lower() == str(threshold).strip().lower()
+            if op == "$lte":
+                return float(value) <= float(threshold)
+            if op == "$gte":
+                return float(value) >= float(threshold)
+        except (TypeError, ValueError):
+            return False
+        return False
+    return str(value).strip().lower() == str(condition).strip().lower()
+
+
+def _passes_hard_filters(metadata: dict[str, Any], filters: dict[str, Any]) -> bool:
+    """
+    @desc Loại HẲN candidate nếu không khớp category/price/element (mệnh) khi khách đã nêu rõ các
+    tiêu chí này — không cho lọt vào kết quả dưới dạng "gợi ý tương tự" nữa (xem
+    resources/prompt/synth_agent.md).
+    @params metadata (dict[str, Any]): Metadata thô của candidate
+    @params filters (dict[str, Any]): Bộ điều kiện lọc từ KR Agent
+    @return bool: True nếu candidate được giữ lại (thỏa mọi hard filter có mặt), False nếu bị loại
+    """
+    for key in _HARD_FILTER_KEYS:
+        if key not in filters:
+            continue
+        field = _FILTER_KEY_TO_METADATA_FIELD.get(key, key)
+        value = metadata.get(field)
+        if value is None or value == "":
+            return False
+        if key == "element":
+            if not _check_element_condition(value, filters[key]):
+                return False
+        elif not _check_condition(value, filters[key]):
+            return False
+    return True
+
+
 def _meta_score(metadata: dict[str, Any], filters: dict[str, Any]) -> float:
     """
-    @desc Tính điểm lọc metadata theo kiểu soft scoring — trả về tỷ lệ điều kiện thỏa mãn thay vì
-    all-or-nothing. Giúp sản phẩm gần đúng (vd: category khác nhưng giá phù hợp) vẫn xuất hiện.
+    @desc Tính điểm lọc metadata theo kiểu soft scoring cho các tiêu chí KHÔNG thuộc hard filter
+    (vd in_stock) — trả về tỷ lệ điều kiện thỏa mãn. category/price đã được lọc cứng ở
+    _passes_hard_filters nên không cần tính lại ở đây.
     @params metadata (dict[str, Any]): Metadata của tài liệu cần kiểm tra
     @params filters (dict[str, Any]): Bộ điều kiện lọc hỗ trợ toán tử $eq, $lte, $gte
-    @return float: Tỷ lệ [0.0, 1.0] — số điều kiện thỏa / tổng điều kiện
+    @return float: Tỷ lệ [0.0, 1.0] — số điều kiện thỏa / tổng điều kiện (loại trừ hard filter keys)
     """
-    if not filters:
+    soft_filters = {k: v for k, v in filters.items() if k not in _HARD_FILTER_KEYS}
+    if not soft_filters:
         return 1.0
 
     matches = 0
-    for key, condition in filters.items():
-        value = metadata.get(key)
+    for key, condition in soft_filters.items():
+        field = _FILTER_KEY_TO_METADATA_FIELD.get(key, key)
+        value = metadata.get(field)
         if value is None:
             continue
-        passed = False
-        if isinstance(condition, dict):
-            op, threshold = next(iter(condition.items()))
-            if op == "$eq":
-                passed = value == threshold
-            elif op == "$lte":
-                try:
-                    passed = float(value) <= float(threshold)
-                except (TypeError, ValueError):
-                    pass
-            elif op == "$gte":
-                try:
-                    passed = float(value) >= float(threshold)
-                except (TypeError, ValueError):
-                    pass
-        else:
-            passed = value == condition
-        if passed:
+        if _check_condition(value, condition):
             matches += 1
 
-    return matches / len(filters)
+    return matches / len(soft_filters)
 
 
 def _mmr_select(
@@ -175,14 +238,19 @@ def hybrid_search(
         for i, (chunk_text, meta, doc_vec, distance) in enumerate(
             zip(docs_list, metas_list, embeds_list, distances_list)
         ):
+            if not _passes_hard_filters(meta, filters):
+                continue
+
             dense_score = max(0.0, 1.0 - distance)
             sparse_score = sparse_scores[i] if i < len(sparse_scores) else 0.0
             meta_score = _meta_score(meta, filters)
+            is_hot = bool(meta.get("is_hot", False))
 
             composite = (
                 LAMBDA_DENSE * dense_score
                 + LAMBDA_SPARSE * sparse_score
                 + LAMBDA_META * meta_score
+                + (POPULARITY_BOOST if is_hot else 0.0)
             )
 
             raw_attrs = meta.get("attributes")
@@ -200,6 +268,7 @@ def hybrid_search(
                 sale_price=meta.get("sale_price"),
                 in_stock=bool(meta.get("in_stock", True)),
                 attributes=attrs,
+                is_hot=is_hot,
                 collection_source=collection_name,
                 chunk_text=chunk_text,
                 composite_score=composite,
@@ -213,7 +282,20 @@ def hybrid_search(
     custom_logger.info(f"[HybridSearch] raw_candidates={len(raw_candidates)} across 3 collections")
 
     raw_candidates.sort(key=lambda x: x[2], reverse=True)
-    top_candidates = [(doc, vec) for doc, vec, _ in raw_candidates[:TOP_K_INITIAL]]
+
+    # Dedupe theo product_id — cùng 1 sản phẩm có thể xuất hiện qua nhiều chunk (overview + specs
+    # + reviews), giữ lại chunk điểm cao nhất mỗi sản phẩm. Nếu không dedupe ở đây, MMR có thể chọn
+    # 2 chunk của CÙNG 1 sản phẩm (embedding overview/specs đủ khác nhau để bị coi là "đa dạng"),
+    # khiến số sản phẩm PHÂN BIỆT trả về ít hơn k dù caller (Synth Agent) cần đủ k lựa chọn khác nhau.
+    seen_ids: set[str] = set()
+    deduped_candidates: list[tuple[ProductDoc, list[float], float]] = []
+    for doc, vec, score in raw_candidates:
+        if doc.id in seen_ids:
+            continue
+        seen_ids.add(doc.id)
+        deduped_candidates.append((doc, vec, score))
+
+    top_candidates = [(doc, vec) for doc, vec, _ in deduped_candidates[:TOP_K_INITIAL]]
 
     results_final = _mmr_select(query_vec, top_candidates, k=k)
 

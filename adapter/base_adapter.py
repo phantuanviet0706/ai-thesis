@@ -65,13 +65,25 @@ class BaseAdapter(ABC):
         Không phải platform nào cũng hỗ trợ — implement no-op nếu không có.
         """
 
+    async def send_photos(self, receiver_id: str, photo_urls: list[str], caption: str | None = None) -> None:
+        """
+        Gửi 1 hoặc nhiều ảnh sản phẩm cho khách (dùng khi ChatResponse.image_urls có dữ liệu,
+        xem services/chat_service.py::_resolve_product_images). Mặc định no-op — override ở
+        adapter nào hỗ trợ gửi ảnh. Không phải @abstractmethod vì không phải platform nào
+        cũng cần/hỗ trợ tính năng này ngay từ đầu.
+        """
+
     # ── Optional hooks ────────────────────────────────────────────────────────
 
     async def on_start_command(self, receiver_id: str) -> None:
         """Xử lý lệnh /start — override để gửi tin nhắn chào mừng tùy chỉnh."""
 
     async def on_reset_command(self, receiver_id: str) -> None:
-        """Xử lý lệnh /reset — override để xác nhận reset session."""
+        """
+        Gửi xác nhận cho khách sau lệnh /reset — override để tùy chỉnh nội dung.
+        Việc xóa checkpoint LangGraph thật sự đã được messaging/handler.py thực hiện
+        (ChatService.reset_session) TRƯỚC khi hook này được gọi — không cần tự xóa lại ở đây.
+        """
 
     # ── Utility ───────────────────────────────────────────────────────────────
 

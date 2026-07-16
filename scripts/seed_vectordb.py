@@ -98,6 +98,11 @@ def _build_review_text(review: ProductReview, product_name: str, category: str) 
 # ---------------------------------------------------------------------------
 
 def _product_meta(p: Product, category: str, brand: str) -> dict:
+    # is_hot/element được promote lên top-level metadata (thay vì chỉ nằm trong attributes JSON)
+    # vì _meta_score()/_passes_hard_filters() trong hybrid_search.py chỉ đọc field top-level để
+    # lọc/boost điểm — element dùng để lọc CỨNG theo mệnh khách nêu (xem resources/prompt/kr_agent.md).
+    is_hot = bool(p.attributes.get("is_hot", False)) if p.attributes else False
+    element = (p.attributes.get("element") or "") if p.attributes else ""
     return {
         "product_id": str(p.id),
         "name": p.name or "",
@@ -109,11 +114,15 @@ def _product_meta(p: Product, category: str, brand: str) -> dict:
         "unit_price": float(p.unit_price),
         "sale_price": float(p.sale_price) if p.sale_price else 0.0,
         "in_stock": bool(p.in_stock),
+        "is_hot": is_hot,
+        "element": element,
         "attributes": json.dumps(p.attributes, ensure_ascii=False) if p.attributes else "",
     }
 
 
 def _review_meta(review: ProductReview, p: Product, category: str) -> dict:
+    is_hot = bool(p.attributes.get("is_hot", False)) if p.attributes else False
+    element = (p.attributes.get("element") or "") if p.attributes else ""
     return {
         "product_id": str(p.id),
         "name": p.name or "",
@@ -125,6 +134,8 @@ def _review_meta(review: ProductReview, p: Product, category: str) -> dict:
         "unit_price": float(p.unit_price),
         "sale_price": float(p.sale_price) if p.sale_price else 0.0,
         "in_stock": bool(p.in_stock),
+        "is_hot": is_hot,
+        "element": element,
         "attributes": json.dumps(p.attributes, ensure_ascii=False) if p.attributes else "",
         "review_id": str(review.id),
         "rating": int(bool(review.rating)),

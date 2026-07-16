@@ -432,7 +432,15 @@ def gen_products(start_id: int, n: int, brand_ids: list[int], category_pool: lis
         )
         short_description = f"{jewelry_name} {material}, hợp mệnh {element}, phong cách {style.lower()}."
 
-        attributes = {"material": material, "element": element, "origin": origin, "style": style}
+        # ~15% sản phẩm được đánh dấu "hot" (bestseller) — dùng để boost nhẹ trong hybrid_search
+        # và cho Synth Agent gợi ý chủ động ("đang hot"/"bán chạy") khi khách chưa có nhu cầu cụ thể.
+        is_hot = random.random() < 0.15
+        sold_count = random.randint(80, 500) if is_hot else random.randint(0, 60)
+
+        attributes = {
+            "material": material, "element": element, "origin": origin, "style": style,
+            "is_hot": is_hot, "sold_count": sold_count,
+        }
 
         rows.append([
             pid, name, slug, sku, description, short_description,
@@ -995,7 +1003,21 @@ def main():
         ("audit_logs", "-- [23] Resolve circular FK"),
     ]
 
+    # Xóa khối EXTENDED cũ (nếu có) của từng bảng trước khi chèn khối mới — script này có
+    # thể được chạy nhiều lần khi lặp lại quá trình tạo seed data, và trước đây luôn CHÈN
+    # THÊM một bản sao ngay trước anchor mà không xóa bản đã chèn ở lần chạy trước, khiến
+    # seed.sql bị lặp 3 lần (mỗi bảng) sau 3 lần chạy → lỗi duplicate primary key khi import.
     for key, anchor_text in anchors:
+        content = re.sub(
+            r"\n-- -{60}\n"
+            rf"-- \[{re.escape(key)}\] EXTENDED.*?\n"
+            r"-- -{60}\n"
+            r"INSERT INTO .*?;\n",
+            "\n",
+            content,
+            flags=re.DOTALL,
+        )
+
         marker = f"\n-- ============================================================\n{anchor_text}"
         idx = content.index(marker)
         insertion = (

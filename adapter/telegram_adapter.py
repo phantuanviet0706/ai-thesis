@@ -84,6 +84,31 @@ class TelegramAdapter(BaseAdapter):
     async def send_typing(self, receiver_id: str) -> None:
         await self._call_api("sendChatAction", {"chat_id": receiver_id, "action": "typing"})
 
+    async def send_photos(self, receiver_id: str, photo_urls: list[str], caption: str | None = None) -> None:
+        """
+        1 ảnh -> sendPhoto. 2+ ảnh -> sendMediaGroup (album), batch tối đa 10 ảnh/lần theo
+        giới hạn của Telegram Bot API. Caption (nếu có) chỉ gắn vào ảnh đầu tiên của batch đầu.
+        """
+        if not photo_urls:
+            return
+
+        if len(photo_urls) == 1:
+            payload: dict[str, Any] = {"chat_id": receiver_id, "photo": photo_urls[0]}
+            if caption:
+                payload["caption"] = caption[:1024]
+            await self._call_api("sendPhoto", payload)
+            return
+
+        for batch_start in range(0, len(photo_urls), 10):
+            batch = photo_urls[batch_start: batch_start + 10]
+            media = []
+            for i, url in enumerate(batch):
+                item: dict[str, Any] = {"type": "photo", "media": url}
+                if i == 0 and batch_start == 0 and caption:
+                    item["caption"] = caption[:1024]
+                media.append(item)
+            await self._call_api("sendMediaGroup", {"chat_id": receiver_id, "media": media})
+
     async def on_start_command(self, receiver_id: str) -> None:
         await self.send_message(
             receiver_id,

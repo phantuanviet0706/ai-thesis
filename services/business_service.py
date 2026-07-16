@@ -11,14 +11,13 @@ BusinessService — xử lý toàn bộ side-effects sau mỗi lượt hội tho
 Tất cả chạy async background — không ảnh hưởng latency response.
 """
 
-import asyncio
 import json
 import re
 import uuid
 from typing import Any
 
 from core.logger import custom_logger
-from database import get_db
+from database import get_db, run_with_deadlock_retry
 from database.vector_db_manager import VectorDBManager
 from repositories.business_repository import BusinessRepository
 from repositories.conversation_repository import ConversationRepository
@@ -89,10 +88,12 @@ class BusinessService:
         session_transcript: list[tuple[str, str]] | None = None,
     ) -> None:
         """
-        @desc Entry point bất đồng bộ — gọi toàn bộ pipeline lưu trữ dữ liệu kinh doanh và ML
+        @desc Entry point bất đồng bộ — gọi toàn bộ pipeline lưu trữ dữ liệu kinh doanh và ML.
+        Tự động retry nếu gặp deadlock MySQL thoáng qua (vd đụng độ với ChatService._persist_turn
+        cùng ghi ConversationSessions của cùng session) — xem database/__init__.py::run_with_deadlock_retry.
         """
         try:
-            await asyncio.to_thread(
+            await run_with_deadlock_retry(
                 self._process_turn_sync,
                 session_id, user_message, final_response,
                 psych_state, psych_confidence, primary_concern, consult_strategy,

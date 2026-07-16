@@ -6,8 +6,10 @@ Immutable constraints (thesis §3.2.4):
   2. Strategy Alignment: response structure conforms to Psych Agent's consult_strategy
   3. Natural Tone: friendly, culturally localized Vietnamese register
 
-Response structure follows AIDA marketing model:
-  Attention → Interest → Desire → Action (CTA calibrated to psych_state)
+Consultative-first: no hard word cap, no rigid branch script — the agent reasons about
+psych_state/consult_strategy/primary_concern like a genuine advisor. When the customer
+has no specific product insight yet, it proactively surfaces a hot or profile-matched
+product (see resources/prompt/synth_agent.md) instead of only asking questions.
 """
 
 import time
@@ -23,36 +25,49 @@ from database.vector_db_manager import VectorDBManager
 from entity.product_doc import ProductDoc
 from graph.state import ConversationState, PsychState
 from retrieval.embeddings import embed_query
-from utils.helper import read_file_contents
+from utils.helper import format_customer_profile, read_file_contents, resolve_address_style
 
 _MIN_SUCCESS_EXAMPLES = 3   # chỉ retrieval khi có đủ ≥ 3 session thành công để ví dụ có giá trị
 
 _SYNTH_SYSTEM = read_file_contents("resources/prompt/synth_agent.md")
 
 
-def _format_products_for_synth(products: list[ProductDoc], scores: list[float]) -> str:
+def _format_products_for_synth(
+    products: list[ProductDoc],
+    scores: list[float] | None = None,
+    header: str = "=== SẢN PHẨM TÌM ĐƯỢC ===",
+) -> str:
     """
-    @desc Định dạng danh sách sản phẩm và điểm số thành chuỗi văn bản để đưa vào context của Synth Agent
-    @params products (list[ProductDoc]): Danh sách sản phẩm được trả về từ KR Agent (tối đa 3 sản phẩm đầu)
-    @params scores (list[float]): Danh sách điểm composite tương ứng với từng sản phẩm
+    @desc Định dạng danh sách sản phẩm thành chuỗi văn bản để đưa vào context của Synth Agent
+    @params products (list[ProductDoc]): Danh sách sản phẩm (tối đa 5 sản phẩm đầu, khớp TOP_K_FINAL
+    — đủ để Synth Agent trình bày tối thiểu 5 lựa chọn khi khách đang tìm hiểu 1 dòng sản phẩm, xem
+    "Tư Vấn Chủ Động" trong resources/prompt/synth_agent.md)
+    @params scores (list[float] | None): Điểm composite tương ứng (nếu có) — chỉ dùng để tính toán nội bộ,
+    không hiển thị trong context nên có thể bỏ qua khi định dạng previous_turn_products
+    @params header (str): Dòng tiêu đề của block, phân biệt sản phẩm lượt này với lượt trước
     @return str: Chuỗi văn bản mô tả sản phẩm đã được định dạng, hoặc thông báo không tìm thấy sản phẩm
     """
     if not products:
-        return "Không có sản phẩm nào được tìm thấy."
+        return f"{header}\n(không có)"
 
-    lines = ["=== SẢN PHẨM TÌM ĐƯỢC ==="]
-    for i, (p, score) in enumerate(zip(products[:3], scores[:3]), 1):
+    scores = scores or []
+    lines = [header]
+    for i, p in enumerate(products[:5], 1):
         price = f"{p.unit_price:,.0f}₫"
         if p.sale_price and p.sale_price < p.unit_price:
             price = f"~~{p.unit_price:,.0f}₫~~ → {p.sale_price:,.0f}₫"
 
         chunk_preview = p.chunk_text[:120] + "..." if len(p.chunk_text) > 120 else p.chunk_text
 
+        element = (p.attributes or {}).get("element") if p.attributes else None
+
         lines.append(
             f"\n[{i}] {p.name}"
             + (f" (SKU: {p.sku})" if p.sku else "")
+            + (" 🔥 ĐANG HOT (bán chạy)" if p.is_hot else "")
             + f"\n    Danh mục: {p.category or 'N/A'} | Thương hiệu: {p.brand or 'Pancharm'}"
             + f"\n    Giá: {price} | Còn hàng: {'Có' if p.in_stock else 'Hết hàng'}"
+            + (f"\n    Hợp mệnh: {element}" if element else "")
             + (f"\n    Mô tả: {p.short_description}" if p.short_description else "")
             + f"\n    Chi tiết: {chunk_preview}"
         )
@@ -65,7 +80,11 @@ def _get_llm() -> ChatAnthropic:
         model=settings.ANTHROPIC_MODEL_PRIMARY,
         api_key=settings.ANTHROPIC_API_KEY,
         temperature=0.3,  # factual grounding: thấp để giảm hallucination, vẫn đủ tự nhiên
-        max_tokens=400,
+        # Không còn giới hạn cứng "tối đa 20 từ" — đủ token cho một lời tư vấn tự nhiên,
+        # trọn ý, kể cả khi liệt kê tối thiểu 5 lựa chọn sản phẩm (xem nguyên tắc #2 trong
+        # resources/prompt/synth_agent.md), nhưng vẫn chặn trần để tránh trả lời lan man
+        # vô hạn và giữ latency ổn định.
+        max_tokens=600,
     )
 
 
@@ -134,6 +153,7 @@ def _build_synth_messages(state: ConversationState) -> tuple[list, str]:
     """
     products = state.get("retrieved_products", [])
     scores = state.get("retrieval_scores", [])
+    previous_products = state.get("previous_turn_products", [])
     psych_state = state.get("psych_state", PsychState.CURIOUS)
     consult_strategy = state.get("consult_strategy", "Tư vấn chung")
     primary_concern = state.get("primary_concern")
@@ -149,21 +169,30 @@ def _build_synth_messages(state: ConversationState) -> tuple[list, str]:
     # Số lượt khách đã nhắn (để biết đây là lượt mấy)
     turn_number = sum(1 for m in all_messages if getattr(m, "type", "") == "human")
     history_text = _format_history_for_synth(all_messages, max_turns=3)
-    product_context = _format_products_for_synth(products, scores)
+    product_context = _format_products_for_synth(products, scores, header="=== SẢN PHẨM TÌM ĐƯỢC LƯỢT NÀY ===")
+    previous_product_context = _format_products_for_synth(
+        previous_products, header="=== SẢN PHẨM ĐÃ GỢI Ý LƯỢT TRƯỚC ==="
+    )
     psych_label = _PSYCH_STATE_LABELS.get(psych_state, str(psych_state))
 
     history_section = f"Lịch sử hội thoại trước:\n{history_text}\n\n" if history_text else ""
     continuation_hint = "" if turn_number <= 1 else "KHÔNG lặp lại lời chào. Tiếp tục cuộc hội thoại tự nhiên.\n"
     success_example = _get_similar_success_example(last_user_msg)
+    profile_line = format_customer_profile(state.get("extracted_info"))
+    profile_section = f"{profile_line}\n" if profile_line else ""
+    address_style = resolve_address_style(all_messages)
 
     user_prompt = (
         f"{history_section}"
         f"Tin nhắn mới nhất của khách: {last_user_msg}\n\n"
         f"Ý định: {user_intent}\n"
         f"Lượt thứ: {turn_number}\n\n"
+        f"Xưng hô lượt này: {address_style}\n"
         f"Trạng thái tâm lý: {psych_label}\n"
         f"Chiến lược tư vấn: {consult_strategy}\n"
         + (f"Rào cản chính: {primary_concern}\n" if primary_concern else "")
+        + profile_section
+        + f"\n{previous_product_context}\n"
         + f"\n{product_context}\n"
         + success_example
         + f"\n{continuation_hint}"
@@ -201,8 +230,10 @@ async def synth_agent_node(state: ConversationState) -> dict:
 
     response_text = "".join(chunks)
     latency = (time.perf_counter() - t0) * 1000
+    word_count = len(response_text.split())
     custom_logger.info(
-        f"[Synth Agent] complete | response_len={len(response_text)} chars | {latency:.0f}ms"
+        f"[Synth Agent] complete | words={word_count} | "
+        f"response_len={len(response_text)} chars | {latency:.0f}ms"
     )
 
     return {
