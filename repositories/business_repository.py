@@ -23,6 +23,21 @@ from entity.user import User
 from entity.user_profile import UserProfile
 
 
+def _truncate(value: str | None, max_len: int) -> str | None:
+    """
+    @desc Cắt bớt chuỗi cho vừa giới hạn cột VARCHAR — dùng cho các field nhận free-text từ LLM
+    (consult_strategy, primary_concern) hoặc từ exception (error_message), vốn không có giới hạn
+    độ dài ở nguồn nên có thể vượt cột bất cứ lúc nào (đã gặp thật: MySQL 1406 "Data too long for
+    column 'consult_strategy'" khi Psych Agent sinh chiến lược tư vấn dài hơn 500 ký tự).
+    @params value (str | None): Chuỗi cần kiểm tra
+    @params max_len (int): Độ dài tối đa cột cho phép
+    @return str | None: Chuỗi gốc nếu đủ ngắn, hoặc bản cắt còn đúng max_len ký tự (kèm dấu … ở cuối)
+    """
+    if value is None or len(value) <= max_len:
+        return value
+    return value[: max_len - 1] + "…"
+
+
 class BusinessRepository:
     def __init__(self, db: Session):
         self.db = db
@@ -216,8 +231,8 @@ class BusinessRepository:
             turn_number=turn_number,
             psych_state=psych_state,
             confidence_score=min(1.0, max(0.0, confidence)),
-            primary_concern=primary_concern,
-            consult_strategy=consult_strategy,
+            primary_concern=_truncate(primary_concern, PsychStateLog.primary_concern.type.length),
+            consult_strategy=_truncate(consult_strategy, PsychStateLog.consult_strategy.type.length),
             raw_output=raw_output,
         ))
 
@@ -248,5 +263,5 @@ class BusinessRepository:
             latency_ms=latency_ms,
             retrieval_score=retrieval_score,
             retrieved_product_ids=retrieved_product_ids,
-            error_message=error_message,
+            error_message=_truncate(error_message, AgentPerformanceLog.error_message.type.length),
         ))

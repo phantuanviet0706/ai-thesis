@@ -76,6 +76,12 @@ class ConversationState(TypedDict):
     retrieved_products: list[ProductDoc]
     retrieval_scores: list[float]
 
+    # True khi KR Agent không tìm được sản phẩm nào trong đúng ngân sách khách nêu và đã tự động
+    # bỏ filter giá để tìm sản phẩm đúng mệnh/danh mục gần nhất (xem agents/kr_agent.py) — báo cho
+    # Synth Agent biết giá sản phẩm trong retrieved_products đã VƯỢT ngân sách khách nêu, tránh
+    # vòng lặp hỏi nới giá nhiều lượt liên tiếp.
+    budget_relaxed: bool
+
     # Snapshot of retrieved_products từ LƯỢT TRƯỚC — ghi bởi Extraction Agent (xem
     # agents/extraction_agent.py) SAU KHI Synth/Extraction Agent của lượt hiện tại đã đọc
     # xong giá trị cũ. Không được ghi bởi kr_agent vì retrieved_products đã bị reset về []

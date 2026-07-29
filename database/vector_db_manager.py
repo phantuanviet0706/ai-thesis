@@ -29,6 +29,23 @@ class VectorDBManager:
             custom_logger.info("[VectorDB] ChromaDB client ready")
         return cls._instance
 
+    def reset_client(self) -> None:
+        """
+        @desc Khởi tạo lại PersistentClient — dùng khi client trong process hiện tại đang giữ
+        handle HNSW segment cũ không còn khớp với dữ liệu thật trên disk (vd: có process khác —
+        script seed riêng biệt — ghi đè lên cùng thư mục CHROMA_PATH trong khi process này đang
+        chạy). chromadb.PersistentClient không đảm bảo an toàn khi nhiều process cùng mở client
+        trỏ vào cùng 1 thư mục — client đã mở sẵn có thể không thấy được thay đổi từ process khác,
+        gây lỗi kiểu "Error creating hnsw segment reader: Nothing found on disk" dù dữ liệu trên
+        disk hoàn toàn hợp lệ (client mới mở trong process khác đọc bình thường). Gọi lại hàm này
+        tương đương "soft-restart" phần kết nối ChromaDB mà không cần restart cả server.
+        """
+        custom_logger.warning(
+            f"[VectorDB] Reinitializing PersistentClient (stale segment handle recovery) | "
+            f"path='{settings.CHROMA_PATH}'"
+        )
+        self.client = chromadb.PersistentClient(path=settings.CHROMA_PATH)
+
     def get_collection(self, name: str) -> Collection:
         """
         @desc Lấy collection hiện có hoặc tạo mới collection trong ChromaDB theo tên.

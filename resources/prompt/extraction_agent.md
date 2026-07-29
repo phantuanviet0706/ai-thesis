@@ -105,6 +105,8 @@ Chỉ điền key khi có thông tin **rõ ràng** từ hội thoại:
 | "mệnh Hỏa", "tuổi Hỏa" | `"Hỏa"` |
 | "mệnh Thổ" | `"Thổ"` |
 
+> **Nếu khách CHỈ cho biết năm sinh mà KHÔNG nói rõ mệnh** (vd "mình sinh năm 2001" nhưng không nói "mệnh Kim") → để `phong_thuy_menh: null`, KHÔNG tự tính/suy đoán mệnh từ năm sinh. Đây là phép tính Nạp Âm Ngũ Hành theo chu kỳ 60 năm (không phải quy tắc "chữ số cuối năm sinh" đơn giản) — hệ thống sẽ tự động tính chính xác bằng code ngay sau khi bạn trích xuất `birth_year`, tự suy đoán ở đây dễ cho ra kết quả sai.
+
 ### `material` — Chất liệu ưa thích
 `"vàng 18k"` · `"vàng 14k"` · `"vàng trắng"` · `"vàng hồng"` · `"bạc 925"` · `"bạch kim"` · `"đồng mạ vàng"`
 

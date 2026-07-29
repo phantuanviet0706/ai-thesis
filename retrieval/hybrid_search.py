@@ -3,6 +3,7 @@ import time
 import unicodedata
 from typing import Any
 
+import chromadb.errors
 import numpy as np
 from rank_bm25 import BM25Okapi
 
@@ -195,12 +196,18 @@ def hybrid_search(
     query: str,
     metadata_filters: dict[str, Any] | None = None,
     k: int = TOP_K_FINAL,
+    price_proximity_target: float | None = None,
 ) -> list[ProductDoc]:
     """
     @desc Thực hiện tìm kiếm lai ba giai đoạn cho KR Agent — kết hợp tìm kiếm dày đặc (dense), thưa (BM25) và lọc metadata, sau đó xếp hạng lại bằng MMR
     @params query (str): Câu truy vấn tìm kiếm của người dùng
     @params metadata_filters (dict[str, Any] | None): Bộ điều kiện lọc metadata tùy chọn
-    @params k (int): Số lượng sản phẩm tối đa trả về sau khi xếp hạng MMR
+    @params k (int): Số lượng sản phẩm tối đa trả về sau khi xếp hạng
+    @params price_proximity_target (float | None): Nếu có — dùng cho fallback "không đúng ngân
+    sách" (xem agents/kr_agent.py::budget_relaxed): bỏ qua MMR/composite score, sort candidates
+    theo khoảng cách giá TUYỆT ĐỐI tới mức này (gần nhất trước, không phân biệt cao/thấp hơn ngân
+    sách) rồi lấy top-k — vì mục tiêu của fallback này là "sản phẩm giá cận trên/cận dưới gần ngân
+    sách khách nêu nhất", không phải độ liên quan ngữ nghĩa/đa dạng như tìm kiếm thông thường.
     @return list[ProductDoc]: Danh sách sản phẩm phù hợp nhất sau khi qua toàn bộ pipeline tìm kiếm
     """
     t0 = time.perf_counter()
@@ -217,11 +224,31 @@ def hybrid_search(
 
     for collection_name, collection in VectorDBManager().get_all_collections().items():
         col_count = collection.count() or 1
-        results = collection.query(
-            query_embeddings=[query_vec],
-            n_results=min(TOP_K_INITIAL, col_count),
-            include=["documents", "metadatas", "embeddings", "distances"],
-        )
+        try:
+            results = collection.query(
+                query_embeddings=[query_vec],
+                n_results=min(TOP_K_INITIAL, col_count),
+                include=["documents", "metadatas", "embeddings", "distances"],
+            )
+        except chromadb.errors.InternalError as exc:
+            # "Error creating hnsw segment reader: Nothing found on disk" — process này đang giữ
+            # PersistentClient/Collection handle cũ, không khớp dữ liệu thật trên disk (thường do
+            # 1 process khác — vd script seed_vectordb.py — ghi vào cùng CHROMA_PATH trong lúc
+            # process này đang chạy). Reset client rồi lấy lại collection MỚI, thử lại đúng 1 lần
+            # trước khi để lỗi văng ra ngoài cho KRAgent.on_error xử lý (xem agents/kr_agent.py).
+            if "disk" not in str(exc).lower() and "segment" not in str(exc).lower():
+                raise
+            custom_logger.warning(
+                f"[HybridSearch] collection='{collection_name}' stale segment handle — "
+                f"resetting client and retrying once | error={exc}"
+            )
+            VectorDBManager().reset_client()
+            collection = VectorDBManager().get_collection(collection_name)
+            results = collection.query(
+                query_embeddings=[query_vec],
+                n_results=min(TOP_K_INITIAL, col_count),
+                include=["documents", "metadatas", "embeddings", "distances"],
+            )
 
         docs_list = results.get("documents", [[]])[0]
         metas_list = results.get("metadatas", [[]])[0]
@@ -295,9 +322,12 @@ def hybrid_search(
         seen_ids.add(doc.id)
         deduped_candidates.append((doc, vec, score))
 
-    top_candidates = [(doc, vec) for doc, vec, _ in deduped_candidates[:TOP_K_INITIAL]]
-
-    results_final = _mmr_select(query_vec, top_candidates, k=k)
+    if price_proximity_target is not None:
+        deduped_candidates.sort(key=lambda x: abs(x[0].unit_price - price_proximity_target))
+        results_final = [doc for doc, _, _ in deduped_candidates[:k]]
+    else:
+        top_candidates = [(doc, vec) for doc, vec, _ in deduped_candidates[:TOP_K_INITIAL]]
+        results_final = _mmr_select(query_vec, top_candidates, k=k)
 
     latency = (time.perf_counter() - t0) * 1000
     custom_logger.info(

@@ -14,11 +14,11 @@ import json
 import time
 from functools import lru_cache
 
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import AIMessage, HumanMessage
 
 from constants.constants import ORCHESTRATOR_FORCE_SYNTH_ITERATION, PSYCH_CONFIDENCE_THRESHOLD
-from core.config import settings
+from core.llm_factory import build_chat_model, build_system_message
 from core.logger import custom_logger
 from graph.state import ConversationState
 from utils.helper import extract_json, read_file_contents
@@ -27,13 +27,8 @@ _SYSTEM_PROMPT = read_file_contents("resources/prompt/orchestrator_agent.md")
 
 
 @lru_cache(maxsize=1)
-def _get_llm() -> ChatAnthropic:
-    return ChatAnthropic(
-        model=settings.ANTHROPIC_MODEL_PRIMARY,
-        api_key=settings.ANTHROPIC_API_KEY,
-        temperature=0.0,
-        max_tokens=600,
-    )
+def _get_llm() -> BaseChatModel:
+    return build_chat_model("PRIMARY", temperature=0.0, max_tokens=600)
 
 
 def orchestrator_node(state: ConversationState) -> dict:
@@ -108,25 +103,56 @@ def orchestrator_node(state: ConversationState) -> dict:
             last_user_message = msg.content
             break
 
+    # Cần cho rule "khách vừa đồng ý đề xuất nới tiêu chí" trong orchestrator_agent.md — nếu
+    # không có nội dung tin bot lượt trước, Orchestrator không thể phân biệt "ừ nới ngân sách
+    # nhé" (đồng ý đề xuất mở rộng, cần tìm lại) với 1 câu trả lời ngắn bất kỳ khác, và dễ route
+    # thẳng synth_agent dù retrieved_products hiện tại vẫn phản ánh tiêu chí CŨ (không rỗng chỉ
+    # vì có sản phẩm không khớp đủ, không phải vì đã tìm đúng tiêu chí mới).
+    last_bot_message = ""
+    for msg in reversed(messages):
+        if isinstance(msg, AIMessage):
+            last_bot_message = msg.content
+            break
+    bot_context = f"Tin nhắn gần nhất của bot (lượt trước):\n{last_bot_message}\n\n" if last_bot_message else ""
+
     user_prompt = (
+        f"{bot_context}"
         f"Tin nhắn mới nhất của khách hàng:\n{last_user_message}\n\n"
         f"Trạng thái hiện tại:\n{state_summary}"
     )
 
-    response = _get_llm().invoke([
-        SystemMessage(content=[{"type": "text", "text": _SYSTEM_PROMPT, "cache_control": {"type": "ephemeral"}}]),
-        HumanMessage(content=user_prompt),
-    ])
+    try:
+        response = _get_llm().invoke([
+            build_system_message(_SYSTEM_PROMPT),
+            HumanMessage(content=user_prompt),
+        ])
+    except Exception as exc:
+        # Lỗi provider (quá tải, timeout, rate limit...) — khác với nhánh JSON parse thất bại
+        # bên dưới vì response không hề tồn tại. Route sang error_handler giống mọi lỗi khác
+        # trong graph, thay vì để exception văng thẳng ra khỏi node và crash cả pipeline (khách
+        # sẽ không nhận được phản hồi nào nếu không bắt ở đây — xem graph/graph.py::error_handler).
+        latency = (time.perf_counter() - t0) * 1000
+        error_msg = f"Orchestrator LLM invoke thất bại | iter={iteration} | {exc}"
+        custom_logger.error(
+            f"[Orchestrator] LLM invoke failed → error_handler | {latency:.0f}ms | iter={iteration}",
+            exc_info=True,
+        )
+        return {
+            "next_node": "error_handler",
+            "user_intent": "",
+            "iteration_count": iteration + 1,
+            "error_state": error_msg,
+        }
 
     next_node = "END"
     user_intent = ""
     try:
-        parsed = extract_json(response.content)
+        parsed = extract_json(response.text)
         next_node = parsed.get("next_node", "END")
         user_intent = parsed.get("user_intent", "")
     except (json.JSONDecodeError, AttributeError, ValueError):
         latency = (time.perf_counter() - t0) * 1000
-        raw = getattr(response, "content", str(response))
+        raw = getattr(response, "text", str(response))
         error_msg = f"Orchestrator LLM trả về định dạng không hợp lệ | iter={iteration}"
         custom_logger.warning(
             f"[Orchestrator] JSON parse failed → error_handler | {latency:.0f}ms | iter={iteration} "

@@ -117,3 +117,27 @@ def format_customer_profile(extracted_info: dict | None) -> str:
     if not parts:
         return ""
     return "Hồ sơ khách hàng đã biết (tích lũy qua các lượt trước): " + " | ".join(parts)
+
+
+# Nạp Âm Ngũ Hành theo chu kỳ 60 năm (Lục Thập Hoa Giáp) — mỗi mệnh lặp lại đúng 2 năm liên
+# tiếp, chu kỳ đầy đủ dài 60 năm. Neo tại 1984 = năm Giáp Tý (mốc đầu chu kỳ nạp âm).
+_NAP_AM_ANCHOR_YEAR = 1984
+_NAP_AM_CYCLE = [
+    "Kim", "Hỏa", "Mộc", "Thổ", "Kim", "Hỏa", "Thủy", "Thổ", "Kim", "Mộc",
+    "Thủy", "Thổ", "Hỏa", "Mộc", "Thủy", "Kim", "Hỏa", "Mộc", "Thổ", "Kim",
+    "Hỏa", "Thủy", "Thổ", "Kim", "Mộc", "Thủy", "Thổ", "Hỏa", "Mộc", "Thủy",
+]  # 30 mệnh, mỗi mệnh ứng 2 năm liên tiếp trong chu kỳ 60 năm
+
+
+def menh_from_birth_year(year: int) -> str | None:
+    """
+    @desc Tính mệnh ngũ hành (Nạp Âm) từ năm sinh dương lịch theo chu kỳ Lục Thập Hoa Giáp bằng
+    bảng tra cứu cố định — KHÔNG giao việc này cho LLM vì đây là chu kỳ 60 năm phi tuyến tính
+    (không phải quy tắc "chữ số cuối năm sinh" đơn giản mà LLM hay suy luận nhầm).
+    @params year (int): Năm sinh dương lịch
+    @return str | None: Một trong "Kim"/"Mộc"/"Thủy"/"Hỏa"/"Thổ", hoặc None nếu năm không hợp lệ
+    """
+    if not isinstance(year, int) or year < 1:
+        return None
+    offset = (year - _NAP_AM_ANCHOR_YEAR) % 60
+    return _NAP_AM_CYCLE[offset // 2]

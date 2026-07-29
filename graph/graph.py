@@ -35,6 +35,7 @@ from agents.order_lookup_node import order_lookup_node
 from agents.orchestrator import orchestrator_node
 from agents.psych_agent import psych_agent_node
 from agents.synth_agent import synth_agent_node
+from constants.constants import FALLBACK_ERROR_RESPONSE
 from core.logger import custom_logger
 from graph.router import conditional_router
 from graph.state import ConversationState
@@ -49,11 +50,7 @@ def _error_handler_node(state: ConversationState) -> dict:
     """
     error_msg = state.get("error_state", "Đã xảy ra lỗi không xác định")
     custom_logger.error(f"[Graph] error_handler triggered | error='{error_msg}'")
-    fallback = (
-        "Xin lỗi, hệ thống đang gặp sự cố tạm thời. "
-        "Bạn vui lòng thử lại sau ít phút hoặc liên hệ trực tiếp với nhân viên tư vấn. "
-        f"[Debug: {error_msg}]"
-    )
+    fallback = f"{FALLBACK_ERROR_RESPONSE} [Debug: {error_msg}]"
     return {
         "messages": [AIMessage(content=fallback)],
         "final_response": fallback,

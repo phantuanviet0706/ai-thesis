@@ -15,7 +15,7 @@ BusinessService đọc để:
 from agents.base_agent import BaseLLMAgent
 from core.logger import custom_logger
 from graph.state import ConversationState, PsychState
-from utils.helper import extract_json
+from utils.helper import extract_json, menh_from_birth_year
 
 
 def _format_messages_for_extraction(state: ConversationState) -> str:
@@ -34,6 +34,30 @@ def _format_product_list(products: list) -> str:
         f"ID={p.id} | {p.name} | {p.unit_price:,.0f}₫"
         for p in products[:5]
     )
+
+
+def _fill_menh_from_birth_year(extracted: dict) -> None:
+    """
+    Nếu khách chỉ cho biết năm sinh mà chưa từng nói rõ mệnh (phong_thuy_menh vẫn null), tự động
+    tính mệnh bằng công thức Nạp Âm Ngũ Hành (utils.helper.menh_from_birth_year) — tính toán bằng
+    code, không để LLM tự suy luận vì dễ sai (xem docstring của menh_from_birth_year).
+    """
+    birth_year = extracted.get("birth_year")
+    if birth_year is None:
+        return
+
+    prefs = extracted.setdefault("preferences", {})
+    if prefs.get("phong_thuy_menh"):
+        return
+
+    try:
+        menh = menh_from_birth_year(int(birth_year))
+    except (TypeError, ValueError):
+        return
+
+    if menh:
+        prefs["phong_thuy_menh"] = menh
+        custom_logger.info(f"[Extraction] mệnh tự tính từ birth_year={birth_year} → {menh}")
 
 
 def _format_products_for_context(state: ConversationState) -> str:
@@ -69,6 +93,7 @@ class ExtractionAgent(BaseLLMAgent):
 
     def parse_response(self, raw_content: str, state: ConversationState) -> dict:
         extracted = extract_json(raw_content)
+        _fill_menh_from_birth_year(extracted)
         custom_logger.info(
             f"[Extraction] done | outcome={extracted.get('conversion_outcome')} | "
             f"order_intent={extracted.get('order_intent')} | "

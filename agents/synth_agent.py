@@ -15,11 +15,11 @@ product (see resources/prompt/synth_agent.md) instead of only asking questions.
 import time
 from functools import lru_cache
 
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import AIMessage, HumanMessage
 
-from constants.constants import COLLECTION_TRAINING_SUCCESS
-from core.config import settings
+from constants.constants import COLLECTION_TRAINING_SUCCESS, FALLBACK_ERROR_RESPONSE
+from core.llm_factory import build_chat_model, build_system_message
 from core.logger import custom_logger
 from database.vector_db_manager import VectorDBManager
 from entity.product_doc import ProductDoc
@@ -30,6 +30,28 @@ from utils.helper import format_customer_profile, read_file_contents, resolve_ad
 _MIN_SUCCESS_EXAMPLES = 3   # chỉ retrieval khi có đủ ≥ 3 session thành công để ví dụ có giá trị
 
 _SYNTH_SYSTEM = read_file_contents("resources/prompt/synth_agent.md")
+
+# Cụm từ ngụ ý việc tra cứu catalog CHƯA xảy ra — sai khi retrieved_products đã có sẵn,
+# vì KR Agent luôn tra cứu xong trước khi Synth nhận context (xem synth_agent.md rule 42).
+_CATALOG_HEDGE_PHRASES = (
+    "kiểm tra lại catalog",
+    "kiểm tra lại kho",
+    "kiểm tra lại xem còn hàng",
+    "kiểm tra lại xem đúng mẫu",
+    "để em xem lại kho",
+    "để em hỏi lại bên kho",
+    "để mình kiểm tra lại",
+    "để em kiểm tra lại",
+)
+
+
+def _has_contradictory_catalog_hedge(response_text: str, has_products: bool) -> bool:
+    """Phát hiện phản hồi tự mâu thuẫn: context đã có sản phẩm nhưng vẫn nói như thể
+    tra cứu catalog chưa xảy ra (vd 'cần kiểm tra lại catalog nhé')."""
+    if not has_products:
+        return False
+    lowered = response_text.lower()
+    return any(phrase in lowered for phrase in _CATALOG_HEDGE_PHRASES)
 
 
 def _format_products_for_synth(
@@ -75,10 +97,9 @@ def _format_products_for_synth(
 
 
 @lru_cache(maxsize=1)
-def _get_llm() -> ChatAnthropic:
-    return ChatAnthropic(
-        model=settings.ANTHROPIC_MODEL_PRIMARY,
-        api_key=settings.ANTHROPIC_API_KEY,
+def _get_llm() -> BaseChatModel:
+    return build_chat_model(
+        "PRIMARY",
         temperature=0.3,  # factual grounding: thấp để giảm hallucination, vẫn đủ tự nhiên
         # Không còn giới hạn cứng "tối đa 20 từ" — đủ token cho một lời tư vấn tự nhiên,
         # trọn ý, kể cả khi liệt kê tối thiểu 5 lựa chọn sản phẩm (xem nguyên tắc #2 trong
@@ -153,6 +174,7 @@ def _build_synth_messages(state: ConversationState) -> tuple[list, str]:
     """
     products = state.get("retrieved_products", [])
     scores = state.get("retrieval_scores", [])
+    budget_relaxed = state.get("budget_relaxed", False)
     previous_products = state.get("previous_turn_products", [])
     psych_state = state.get("psych_state", PsychState.CURIOUS)
     consult_strategy = state.get("consult_strategy", "Tư vấn chung")
@@ -181,6 +203,14 @@ def _build_synth_messages(state: ConversationState) -> tuple[list, str]:
     profile_line = format_customer_profile(state.get("extracted_info"))
     profile_section = f"{profile_line}\n" if profile_line else ""
     address_style = resolve_address_style(all_messages)
+    budget_relaxed_note = (
+        "\nLƯU Ý QUAN TRỌNG: Không có sản phẩm nào khớp đúng ngân sách khách vừa nêu — các sản "
+        "phẩm trong '=== SẢN PHẨM TÌM ĐƯỢC LƯỢT NÀY ===' đã VƯỢT ngân sách đó (nhưng vẫn đúng "
+        "mệnh/danh mục khách yêu cầu, đã tra cứu xong). Nói thẳng giá thực tế ngay, KHÔNG hỏi khách "
+        "có muốn nới giá lên mức nào khác — hệ thống đã tự tìm sản phẩm đúng mệnh gần nhất về giá rồi.\n"
+        if budget_relaxed
+        else ""
+    )
 
     user_prompt = (
         f"{history_section}"
@@ -192,6 +222,7 @@ def _build_synth_messages(state: ConversationState) -> tuple[list, str]:
         f"Chiến lược tư vấn: {consult_strategy}\n"
         + (f"Rào cản chính: {primary_concern}\n" if primary_concern else "")
         + profile_section
+        + budget_relaxed_note
         + f"\n{previous_product_context}\n"
         + f"\n{product_context}\n"
         + success_example
@@ -200,7 +231,7 @@ def _build_synth_messages(state: ConversationState) -> tuple[list, str]:
     )
 
     return [
-        SystemMessage(content=[{"type": "text", "text": _SYNTH_SYSTEM, "cache_control": {"type": "ephemeral"}}]),
+        build_system_message(_SYNTH_SYSTEM),
         HumanMessage(content=user_prompt),
     ], user_prompt
 
@@ -224,11 +255,54 @@ async def synth_agent_node(state: ConversationState) -> dict:
     messages, _ = _build_synth_messages(state)
 
     chunks: list[str] = []
-    async for chunk in _get_llm().astream(messages):
-        if chunk.content:
-            chunks.append(chunk.content)
+    try:
+        async for chunk in _get_llm().astream(messages):
+            if chunk.text:
+                chunks.append(chunk.text)
+    except Exception as exc:
+        # Synth Agent nối thẳng ra END (không qua error_handler như các agent khác), nên phải
+        # tự trả fallback khi LLM call thất bại giữa chừng (provider quá tải, timeout, rate
+        # limit...) — nếu không khách sẽ không nhận được phản hồi nào cả.
+        latency = (time.perf_counter() - t0) * 1000
+        custom_logger.error(
+            f"[Synth Agent] LLM stream failed | {latency:.0f}ms | {exc}", exc_info=True
+        )
+        fallback = f"{FALLBACK_ERROR_RESPONSE} [Debug: Synth Agent lỗi: {exc}]"
+        return {
+            "messages": [AIMessage(content=fallback)],
+            "final_response": fallback,
+            "error_state": None,
+        }
 
     response_text = "".join(chunks)
+
+    if _has_contradictory_catalog_hedge(response_text, bool(products)):
+        custom_logger.warning(
+            "[Synth Agent] contradictory catalog hedge with non-empty retrieved_products — regenerating once"
+        )
+        correction_messages = messages + [
+            AIMessage(content=response_text),
+            HumanMessage(
+                content=(
+                    "Câu trả lời trên ngụ ý bạn CHƯA tra cứu catalog, nhưng "
+                    "'=== SẢN PHẨM TÌM ĐƯỢC LƯỢT NÀY ===' đã có sẵn sản phẩm cụ thể. Viết lại: trình bày "
+                    "thẳng các sản phẩm đó, KHÔNG dùng bất kỳ cụm nào ngụ ý cần kiểm tra lại catalog/kho/tồn hàng."
+                )
+            ),
+        ]
+        try:
+            chunks = []
+            async for chunk in _get_llm().astream(correction_messages):
+                if chunk.text:
+                    chunks.append(chunk.text)
+            response_text = "".join(chunks)
+        except Exception as exc:
+            # Regenerate thất bại — giữ nguyên response_text gốc thay vì làm hỏng cả lượt trả
+            # lời (response gốc dù có hedge mâu thuẫn vẫn còn hữu ích hơn là không trả lời gì).
+            custom_logger.warning(
+                f"[Synth Agent] correction regenerate failed, keeping original response | {exc}"
+            )
+
     latency = (time.perf_counter() - t0) * 1000
     word_count = len(response_text.split())
     custom_logger.info(

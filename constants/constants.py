@@ -1,5 +1,13 @@
 MAX_ITERATIONS = 8
 
+# Phản hồi dự phòng khi pipeline gặp lỗi (LLM provider quá tải, timeout, v.v.) — dùng chung ở
+# graph/graph.py::_error_handler_node và agents/synth_agent.py (synth nối thẳng ra END, không
+# qua error_handler nên cần tự trả fallback khi LLM call thất bại giữa chừng).
+FALLBACK_ERROR_RESPONSE = (
+    "Xin lỗi, hệ thống đang gặp sự cố tạm thời. "
+    "Bạn vui lòng thử lại sau ít phút hoặc liên hệ trực tiếp với nhân viên tư vấn."
+)
+
 VALID_NODES = {"kr_agent", "psych_agent", "synth_agent", "order_lookup", "error_handler"}
 
 # Hybrid search weights — tuned via grid search trên Recall@5 (thesis §3.2.2)
@@ -54,3 +62,9 @@ SESSION_TTL = 3600
 
 # Rate limiting
 RATE_LIMIT_RPM = 100
+
+# Message debounce — gộp nhiều tin nhắn liên tiếp của cùng 1 khách gửi trong khoảng thời gian
+# này thành 1 lượt xử lý duy nhất (xem messaging/debouncer.py), tránh mỗi tin nhắn rời rạc
+# ("cho hỏi" / "vòng tay" / "mệnh kim" / "tầm 2 triệu" gõ thành 4 tin riêng) kích hoạt 4 lần
+# chạy graph + 4 response chồng chéo. Đơn vị: giây.
+MESSAGE_DEBOUNCE_SECONDS = 5.0

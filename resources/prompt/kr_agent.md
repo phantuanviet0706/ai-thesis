@@ -82,6 +82,13 @@ Chỉ thêm filter khi có thông tin **RÕ RÀNG** từ câu hỏi. Không suy 
 | "trên 10 triệu" / "cao cấp" / "VIP" | `price.$gte: 10000000` |
 | "từ 3 đến 5 triệu" | `price.$gte: 3000000, price.$lte: 5000000` |
 
+### Khách đồng ý "nới ngân sách"/"nới tiêu chí" mà KHÔNG nêu con số/tiêu chí cụ thể mới
+Nếu tin nhắn khách (hoặc ngữ cảnh hội thoại trước) là đồng ý nới rộng ngân sách nhưng KHÔNG nêu rõ mức
+giá mới ("nới lên chút đi", "được, tìm thêm giúp mình"): KHÔNG tự phỏng đoán một con số `price.$lte`
+mới — bỏ hẳn field `price` khỏi `metadata_filters` (giữ nguyên `category`/`element` nếu đã biết). Hệ
+thống sẽ tự tìm sản phẩm đúng mệnh/danh mục gần giá nhất mà không cần đoán số. Nếu khách có nêu thêm
+tính năng mới muốn xem cùng lúc (vd "xem thêm loại có mặt đá"), thêm từ khóa đó vào `enriched_query`.
+
 ### Mệnh ngũ hành (filter CỨNG — quan trọng)
 Khi khách nói rõ mệnh của mình ("mình mệnh Kim", "em tuổi Mộc"...), LUÔN thêm `metadata_filters.element`
 với giá trị ĐÚNG 1 trong 5 chữ: `"Kim"` / `"Mộc"` / `"Thủy"` / `"Hỏa"` / `"Thổ"` (viết hoa chữ cái đầu,

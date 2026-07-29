@@ -15,10 +15,10 @@ __call__() lo phần còn lại (gọi LLM với cache_control, đo latency, log
 import time
 from abc import ABC, abstractmethod
 
-from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.language_models.chat_models import BaseChatModel
+from langchain_core.messages import HumanMessage
 
-from core.config import settings
+from core.llm_factory import build_chat_model, build_system_message
 from core.logger import custom_logger
 from graph.state import ConversationState
 from utils.helper import read_file_contents
@@ -27,7 +27,7 @@ from utils.helper import read_file_contents
 class BaseLLMAgent(ABC):
     prompt_path: str
     log_tag: str
-    model_key: str = "FAST"  # "FAST" -> ANTHROPIC_MODEL_FAST | "PRIMARY" -> ANTHROPIC_MODEL_PRIMARY
+    model_key: str = "FAST"  # "FAST" -> tier nhanh/rẻ | "PRIMARY" -> tier reasoning tốt hơn
     temperature: float = 0.0
     max_tokens: int = 400
 
@@ -35,20 +35,13 @@ class BaseLLMAgent(ABC):
         self._system_prompt = read_file_contents(self.prompt_path)
         # Instance được tạo 1 lần duy nhất khi graph compile (xem graph/graph.py) và tái sử
         # dụng suốt vòng đời app — lazy-init này tương đương @lru_cache(maxsize=1) cũ, chỉ
-        # tạo 1 ChatAnthropic client và dùng lại cho mọi request sau đó.
-        self._llm: ChatAnthropic | None = None
+        # tạo 1 chat model client và dùng lại cho mọi request sau đó.
+        self._llm: BaseChatModel | None = None
 
-    def _get_llm(self) -> ChatAnthropic:
+    def _get_llm(self) -> BaseChatModel:
         if self._llm is None:
-            model = (
-                settings.ANTHROPIC_MODEL_PRIMARY if self.model_key == "PRIMARY"
-                else settings.ANTHROPIC_MODEL_FAST
-            )
-            self._llm = ChatAnthropic(
-                model=model,
-                api_key=settings.ANTHROPIC_API_KEY,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens,
+            self._llm = build_chat_model(
+                self.model_key, temperature=self.temperature, max_tokens=self.max_tokens
             )
         return self._llm
 
@@ -79,14 +72,10 @@ class BaseLLMAgent(ABC):
         try:
             user_prompt = self.build_user_prompt(state)
             response = self._get_llm().invoke([
-                SystemMessage(content=[{
-                    "type": "text",
-                    "text": self._system_prompt,
-                    "cache_control": {"type": "ephemeral"},
-                }]),
+                build_system_message(self._system_prompt),
                 HumanMessage(content=user_prompt),
             ])
-            delta = self.parse_response(response.content, state)
+            delta = self.parse_response(response.text, state)
         except Exception as exc:
             delta = self.on_error(exc, state)
 

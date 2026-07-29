@@ -399,6 +399,7 @@ class ChatService:
             "iteration_count": 0,
             "retrieved_products": [],
             "retrieval_scores": [],
+            "budget_relaxed": False,
             "final_response": "",
             "error_state": None,
         }

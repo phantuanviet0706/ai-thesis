@@ -34,10 +34,22 @@ class Setting(BaseSettings):
     CHROMA_PORT: int = 8000
     CHROMA_PATH: str = "./chroma_db"
 
-    # LLM — Anthropic (primary) + OpenAI (embeddings)
+    # LLM — chọn provider qua LLM_PROVIDER, xem core/llm_factory.py::build_chat_model
+    LLM_PROVIDER: str = "gemini"  # "anthropic" | "gemini"
+
+    # Anthropic
     ANTHROPIC_API_KEY: str = ""
     ANTHROPIC_MODEL_PRIMARY: str = "claude-sonnet-4-6"    # Orchestrator + Synth Agent
     ANTHROPIC_MODEL_FAST: str = "claude-haiku-4-5-20251001"  # KR Agent + Psych Agent
+    # Adaptive thinking (reasoning) — chỉ áp dụng cho tier PRIMARY, xem core/llm_factory.py
+    ANTHROPIC_REASONING_EFFORT: str = "medium"  # low | medium | high | xhigh | max
+    ANTHROPIC_REASONING_MIN_MAX_TOKENS: int = 2048  # sàn max_tokens khi thinking bật (tránh cắt cụt)
+
+    # Google AI Studio (Gemini)
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL_PRIMARY: str = "gemini-2.5-pro"       # Orchestrator + Synth Agent
+    GEMINI_MODEL_FAST: str = "gemini-2.5-flash"        # KR Agent + Psych Agent + Extraction Agent
+
     OPENAI_API_KEY: str = ""
 
     # Redis
