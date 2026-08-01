@@ -73,11 +73,11 @@ langchain-anthropic==1.4.4
 langchain-chroma==1.1.0
 langchain-classic==1.0.1
 langchain-community==0.4.1
-langchain-core==1.4.6
+langchain-core==1.4.9
 langchain-google-genai==4.2.7
 langchain-huggingface==1.2.0
 langchain-openai==1.1.7
-langchain-protocol==0.0.16
+langchain-protocol==0.0.18
 langchain-text-splitters==1.1.0
 langdetect==1.0.9
 langgraph==1.2.4
