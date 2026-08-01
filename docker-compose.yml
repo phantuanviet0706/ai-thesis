@@ -1,0 +1,130 @@
+# Compose stack cho VPS 6 vCPU (E5 v2) / 8GB RAM / 60GB SSD.
+# Chỉ 3 service: app + mysql + redis-stack. Postgres/Kafka/MinIO KHÔNG có mặt ở đây —
+# Postgres đã gỡ khỏi codebase (không dùng), Kafka là optional (app tự fallback sang xử
+# lý trực tiếp nếu KAFKA_BOOTSTRAP_SERVERS rỗng — xem main.py lifespan), MinIO chưa có
+# code nào thực sự dùng (chỉ có trong config, chưa wire vào service nào) nên không tốn
+# RAM cho nó ở giai đoạn này. ChromaDB chạy embedded trong chính container app (persistent
+# client trên thư mục chroma_db), không phải service riêng.
+#
+# Ngân sách tài nguyên (chủ đích để dưới tổng của VPS, chừa chỗ cho host OS/Nginx/SSH):
+#   app          : 3.0 vCPU / 4GB   (nặng nhất — FastAPI + torch + sentence-transformers)
+#   mysql        : 1.5 vCPU / 1.5GB
+#   redis-stack  : 1.0 vCPU / 1GB
+#   ------------------------------------------------------------------
+#   tổng cấp phát : 5.5 / 6 vCPU, 6.5 / 8GB  → còn lại ~0.5 vCPU / 1.5GB cho host
+#
+# Yêu cầu Docker Compose V2 (lệnh `docker compose`, không phải `docker-compose` v1) để
+# deploy.resources.limits có tác dụng khi chạy ngoài Swarm.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: pancharm-mas:latest
+    container_name: pancharm-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: mysql
+      REDIS_HOST: redis
+    ports:
+      # Chỉ bind localhost — Nginx trên host proxy vào đây, không expose thẳng ra internet.
+      - "127.0.0.1:8088:8088"
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./data:/app/data
+      - ./logs:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "3.0"
+          memory: 4g
+        reservations:
+          memory: 2g
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  mysql:
+    image: mysql:8.0
+    container_name: pancharm-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    command:
+      # innodb-buffer-pool-size nhỏ lại chủ động vì mem_limit của service này chỉ 1.5GB —
+      # để mặc định (thường ăn 128MB-1GB tùy bản MySQL) có thể sát/OOM khi cộng thêm
+      # connection buffers, temp tables lúc seed 2600 dòng SQL.
+      - --innodb-buffer-pool-size=512M
+      - --max-connections=100
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    ports:
+      - "127.0.0.1:3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 1.5g
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+  redis:
+    image: redis/redis-stack-server:latest
+    container_name: pancharm-redis
+    restart: unless-stopped
+    environment:
+      REDIS_ARGS: "--requirepass ${REDIS_PASSWORD} --maxmemory 768mb --maxmemory-policy noeviction"
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 1g
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
+
+volumes:
+  mysql_data:
+  redis_data:

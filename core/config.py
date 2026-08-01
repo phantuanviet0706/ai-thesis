@@ -20,15 +20,6 @@ class Setting(BaseSettings):
     DB_POOL_SIZE: int = 10
     DB_MAX_OVERFLOW: int = 20
 
-    # PostgreSQL (primary physical database)
-    PG_HOST: str = "localhost"
-    PG_PORT: int = 5432
-    PG_NAME: str = "ai-chatbot"
-    PG_USER: str = "admin"
-    PG_PASSWORD: str = "123456789"
-    PG_POOL_SIZE: int = 10
-    PG_MAX_OVERFLOW: int = 20
-
     # ChromaDB
     CHROMA_HOST: str = "localhost"
     CHROMA_PORT: int = 8000
