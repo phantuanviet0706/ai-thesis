@@ -101,33 +101,53 @@ mặc định sinh `downgrade()` đối xứng với `upgrade()`, nhưng autogen
 downgrade cho các thao tác phức tạp — review trước khi cần dùng thật, không phải lúc khẩn
 cấp).
 
-## 9.5. (Tuỳ chọn) CI/CD qua GitHub Actions
+## 9.5. CI/CD qua GitHub Actions
 
-Nếu muốn tự động hoá build (không phải deploy — deploy vẫn nên có bước review migration thủ
-công theo mục 9.2), workflow tối thiểu kiểm tra code trước khi merge vào `main`:
+File thật: `.github/workflows/deploy.yml`. Trigger tự động mỗi lần push lên `main` (đã chọn
+auto-deploy thay vì chỉ bấm tay `workflow_dispatch`) — nghĩa là **mọi merge vào main sẽ tự
+động lên production trong vài phút**, không có bước duyệt thủ công giữa chừng. Hệ quả trực
+tiếp:
 
-```yaml
-# .github/workflows/ci.yml
-name: CI
-on:
-  pull_request:
-    branches: [main]
+- Branch protection cho `main` (require PR review trước khi merge) gần như bắt buộc — nếu
+  không, push thẳng lên main = deploy thẳng, bỏ qua toàn bộ review.
+- Mọi migration DB phải được tạo (`alembic revision --autogenerate`), **review bằng mắt**,
+  và commit vào `alembic/versions/` TRONG PR — không bao giờ tạo migration sau khi đã merge.
+  `scripts/ci-deploy.sh` (bản không tương tác của `deploy.sh`) chạy thẳng
+  `alembic upgrade head`, không có bước `read -p` chờ xác nhận như deploy thủ công.
 
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.13"
-      - run: pip install -r requirements.txt --index-url https://download.pytorch.org/whl/cpu --extra-index-url https://pypi.org/simple
-      - run: python -c "import main"   # smoke test: toàn bộ import chain không lỗi cú pháp/thiếu module
+2 job:
+
+1. `smoke-test` — cài dependency + `python -c "import main"`, xác nhận toàn bộ import chain
+   không lỗi cú pháp/thiếu module trước khi động vào VPS.
+2. `deploy` — chỉ chạy nếu `smoke-test` pass, SSH vào VPS (qua `appleboy/ssh-action`) và chạy
+   `/opt/pancharm/ci-deploy.sh` (đã copy sẵn từ `scripts/ci-deploy.sh`, xem Bước 1 ở
+   `6_deployment-implementation.md`).
+
+### Thiết lập secrets trên GitHub (làm 1 lần)
+
+```bash
+# Trên máy local (KHÔNG phải VPS) — tạo cặp key riêng cho CI, không dùng chung key SSH cá nhân
+ssh-keygen -t ed25519 -f ~/.ssh/pancharm_ci -N "" -C "github-actions-deploy"
+
+# Copy public key vào VPS, cho phép user 'deploy' login bằng key này
+ssh-copy-id -i ~/.ssh/pancharm_ci.pub deploy@<VPS_IP>
 ```
 
-Deploy thật (SSH vào VPS chạy `deploy.sh`) để thủ công hoặc bán tự động (GitHub Actions SSH
-vào chạy script) là quyết định sau — không cần thiết lập ngay cho quy mô đồ án; thêm khi có
-nhu cầu deploy thường xuyên hơn 1 lần/vài ngày.
+Trên GitHub: **Settings → Secrets and variables → Actions → New repository secret**, thêm:
+
+| Secret          | Giá trị                                              |
+|-----------------|-------------------------------------------------------|
+| `VPS_HOST`      | IP hoặc domain VPS                                     |
+| `VPS_USER`      | `deploy`                                                |
+| `VPS_SSH_KEY`   | Nội dung file **private** key (`~/.ssh/pancharm_ci`) — dán nguyên khối kể cả dòng `BEGIN/END` |
+| `VPS_SSH_PORT`  | (tuỳ chọn) chỉ cần nếu đã đổi cổng SSH mặc định khỏi 22, xem `8_security-hardening.md` |
+
+Không paste private key vào chat/AI — tự tạo và tự dán trực tiếp vào GitHub UI.
+
+Nếu repo private và plan GitHub hỗ trợ (Pro/Team/Enterprise), có thể thêm **required
+reviewer** cho environment `production` trong **Settings → Environments** để có 1 bước duyệt
+tay trước khi job `deploy` chạy, dù trigger vẫn tự động — bù lại phần review đã mất khi bỏ
+`workflow_dispatch`-only.
 
 ## 9.6. Checklist mỗi lần deploy
 

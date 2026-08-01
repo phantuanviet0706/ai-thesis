@@ -1,0 +1,48 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Nếu push liên tiếp lên main, xếp hàng chờ deploy trước đó xong thay vì hủy giữa chừng
+# (cancel-in-progress: true sẽ ngắt docker compose build/alembic upgrade nửa chừng — rất
+# dễ để container ở trạng thái dở dang).
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install deps (CPU-only torch wheel)
+        run: |
+          pip install torch==2.10.0 --index-url https://download.pytorch.org/whl/cpu
+          grep -v '^torch==' requirements.txt > requirements.notorch.txt
+          pip install -r requirements.notorch.txt
+
+      - name: Import smoke test
+        run: python -c "import main"
+
+  deploy:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: SSH deploy to VPS
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          command_timeout: 20m
+          script_stop: true
+          script: /opt/pancharm/ci-deploy.sh

@@ -48,11 +48,16 @@ sudo apt install -y nginx certbot python3-certbot-nginx
 sudo mkdir -p /opt/pancharm && sudo chown deploy:deploy /opt/pancharm
 cd /opt/pancharm && git clone __URL_REPO__ app && cd app
 
-# deploy.sh/backup.sh sống trong repo ở scripts/ — copy ra /opt/pancharm/ (KHÔNG chạy từ
-# trong app/, vì deploy.sh sẽ tự git merge đè lên chính nó nếu chạy tại chỗ)
-cp scripts/deploy.sh scripts/backup.sh /opt/pancharm/
-chmod +x /opt/pancharm/deploy.sh /opt/pancharm/backup.sh
+# deploy.sh/backup.sh/ci-deploy.sh sống trong repo ở scripts/ — copy ra /opt/pancharm/
+# (KHÔNG chạy từ trong app/, vì deploy.sh sẽ tự git merge đè lên chính nó nếu chạy tại chỗ)
+cp scripts/deploy.sh scripts/backup.sh scripts/ci-deploy.sh /opt/pancharm/
+chmod +x /opt/pancharm/deploy.sh /opt/pancharm/backup.sh /opt/pancharm/ci-deploy.sh
 ```
+
+Nếu dùng CI/CD tự động qua GitHub Actions (`9_deploy-process.md` mục 9.5), user SSH mà
+Action đăng nhập vào cũng cần quyền chạy `docker compose` không cần `sudo` — tức phải nằm
+trong group `docker` (đã làm ở lệnh `usermod -aG docker deploy` phía trên) và có key riêng
+(không dùng chung key cá nhân) — xem 9.5 để tạo key + add secret trên GitHub.
 
 Checklist đầy đủ + phần hardening SSH: xem `1_vps-infrastructure.md` mục 1.9 và
 `8_security-hardening.md` — làm hardening SSH **ngay sau** bước này, trước khi mở app ra
