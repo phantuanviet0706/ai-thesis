@@ -47,6 +47,11 @@ services:
       - ./chroma_db:/app/chroma_db
       - ./data:/app/data
       - ./logs:/app/logs
+      # Bắt buộc — không mount thì file migration sinh ra bởi `alembic revision
+      # --autogenerate` chỉ tồn tại trong writable layer của container tạm (`docker compose
+      # run --rm`), biến mất ngay khi container bị xoá do --rm. Mount ra host để file persist
+      # và commit được vào git (xem resources/setup/4_data-seed-migrate.md mục 4.3).
+      - ./alembic/versions:/app/alembic/versions
     depends_on:
       mysql:
         condition: service_healthy
