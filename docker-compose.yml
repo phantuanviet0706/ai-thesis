@@ -78,7 +78,12 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     ports:
-      - "127.0.0.1:3306:3306"
+      # 3307 (không phải 3306 mặc định) — VPS này đã có sẵn 1 container MySQL khác (project
+      # production riêng) chiếm cứng host port 3306. App vẫn kết nối qua tên service nội bộ
+      # "mysql:3306" trong network Docker (không đụng port host này) — port 3307 chỉ để tiện
+      # truy cập từ host (mysql client, backup) khi cần, không ảnh hưởng tới container-to-
+      # container traffic.
+      - "127.0.0.1:3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     deploy:
