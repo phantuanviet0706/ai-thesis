@@ -1,17 +1,28 @@
-# Compose stack cho VPS 6 vCPU (E5 v2) / 8GB RAM / 60GB SSD.
-# Chỉ 3 service: app + mysql + redis-stack. Postgres/Kafka/MinIO KHÔNG có mặt ở đây —
-# Postgres đã gỡ khỏi codebase (không dùng), Kafka là optional (app tự fallback sang xử
-# lý trực tiếp nếu KAFKA_BOOTSTRAP_SERVERS rỗng — xem main.py lifespan), MinIO chưa có
-# code nào thực sự dùng (chỉ có trong config, chưa wire vào service nào) nên không tốn
-# RAM cho nó ở giai đoạn này. ChromaDB chạy embedded trong chính container app (persistent
-# client trên thư mục chroma_db), không phải service riêng.
+# ⚠️ VPS THỰC TẾ chỉ có 2 vCPU / ~1.9GB RAM, và ĐANG CHẠY CHUNG với 1 stack production khác
+# (Java app + mysql + minio, không thuộc file này) chiếm sẵn ~1.1GB — RAM còn trống thực sự
+# chỉ ~891Mi (`free -h` → cột available). Ngân sách bên dưới đã ép xuống mức tối thiểu để CÓ
+# THỂ start được trên phần cứng này, KHÔNG phải mức khuyến nghị — torch/transformers/
+# sentence-transformers vẫn có nguy cơ thật bị OOM-kill khi tải model hoặc lúc có traffic
+# đồng thời. Nếu container app bị kill giữa chừng: `docker inspect pancharm-app | grep -i
+# OOMKilled` để xác nhận, và cân nhắc nâng cấp VPS lên tối thiểu 4 vCPU/6-8GB dành riêng thay
+# vì tiếp tục ép chung với stack cũ. Chỉ 3 service: app + mysql + redis-stack. Postgres/Kafka/
+# MinIO KHÔNG có mặt ở đây — Postgres đã gỡ khỏi codebase (không dùng), Kafka là optional (app
+# tự fallback sang xử lý trực tiếp nếu KAFKA_BOOTSTRAP_SERVERS rỗng — xem main.py lifespan),
+# MinIO chưa có code nào thực sự dùng nên không tốn RAM cho nó. ChromaDB chạy embedded trong
+# chính container app (persistent client trên thư mục chroma_db), không phải service riêng.
 #
-# Ngân sách tài nguyên (chủ đích để dưới tổng của VPS, chừa chỗ cho host OS/Nginx/SSH):
-#   app          : 3.0 vCPU / 4GB   (nặng nhất — FastAPI + torch + sentence-transformers)
-#   mysql        : 1.5 vCPU / 1.5GB
-#   redis-stack  : 1.0 vCPU / 1GB
+# Ngân sách tài nguyên (ép tối thiểu, không phải mức thoải mái):
+#   app          : 1.0 vCPU / 900MB  (nặng nhất — FastAPI + torch + sentence-transformers)
+#   mysql        : 0.6 vCPU / 400MB
+#   redis-stack  : 0.4 vCPU / 200MB
 #   ------------------------------------------------------------------
-#   tổng cấp phát : 5.5 / 6 vCPU, 6.5 / 8GB  → còn lại ~0.5 vCPU / 1.5GB cho host
+#   tổng cấp phát : 2.0 / 2.0 vCPU, 1.5GB / ~1.9GB total (không còn buffer cho host/stack cũ —
+#   cpus limit ở đây chỉ là TRẦN cho từng container, không phải phần dành riêng: vẫn phải
+#   tranh chấp 2 vCPU thật với stack production cũ đang chạy song song, không có gì đảm bảo)
+#
+# Docker mặc định cho phép container swap tới 2x memory limit khi memory-swap không set —
+# tận dụng ~3GB swap còn trống trên host làm lớp đệm trước khi bị OOM-kill hẳn, đổi lấy độ
+# trễ cao hơn nhiều lúc container phải swap (đặc biệt lúc pre-warm graph/tải embedding model).
 #
 # Yêu cầu Docker Compose V2 (lệnh `docker compose`, không phải `docker-compose` v1) để
 # deploy.resources.limits có tác dụng khi chạy ngoài Swarm.
@@ -44,15 +55,17 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "3.0"
-          memory: 4g
+          cpus: "1.0"
+          memory: 900m
         reservations:
-          memory: 2g
+          memory: 500m
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
       interval: 30s
       timeout: 5s
-      start_period: 90s
+      # 180s (không phải 90s) — dưới áp lực RAM, cold start (load torch + embedding model +
+      # compile LangGraph graph) có thể phải swap, chậm hơn nhiều so với RAM dư dả.
+      start_period: 180s
       retries: 3
     logging:
       driver: json-file
@@ -70,11 +83,12 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     command:
-      # innodb-buffer-pool-size nhỏ lại chủ động vì mem_limit của service này chỉ 1.5GB —
-      # để mặc định (thường ăn 128MB-1GB tùy bản MySQL) có thể sát/OOM khi cộng thêm
-      # connection buffers, temp tables lúc seed 2600 dòng SQL.
-      - --innodb-buffer-pool-size=512M
-      - --max-connections=100
+      # innodb-buffer-pool-size + max-connections ép rất thấp vì mem_limit của service này
+      # chỉ 400MB (VPS chỉ ~1.9GB RAM, xem ghi chú đầu file) — DB_POOL_SIZE=10 +
+      # DB_MAX_OVERFLOW=20 (core/config.py) chỉ cần tối đa 30 connection từ app, 40 chừa dư
+      # cho alembic/truy cập thủ công.
+      - --innodb-buffer-pool-size=96M
+      - --max-connections=40
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     ports:
@@ -89,8 +103,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.5"
-          memory: 1.5g
+          cpus: "0.6"
+          memory: 400m
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
@@ -108,7 +122,9 @@ services:
     container_name: pancharm-redis
     restart: unless-stopped
     environment:
-      REDIS_ARGS: "--requirepass ${REDIS_PASSWORD} --maxmemory 768mb --maxmemory-policy noeviction"
+      # maxmemory 96mb (không phải 768mb) — chừa ~100MB trong memory limit 200m cho overhead
+      # process/module của redis-stack-server (RediSearch/RedisJSON) trước khi chạm limit.
+      REDIS_ARGS: "--requirepass ${REDIS_PASSWORD} --maxmemory 96mb --maxmemory-policy noeviction"
     ports:
       - "127.0.0.1:6379:6379"
     volumes:
@@ -116,8 +132,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "1.0"
-          memory: 1g
+          cpus: "0.4"
+          memory: 200m
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s

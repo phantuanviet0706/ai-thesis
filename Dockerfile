@@ -47,10 +47,11 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PATH=/home/appuser/.local/bin:$PATH \
     PYTHONPATH=/home/appuser/.local/lib/python3.13/site-packages \
     HF_HOME=/home/appuser/.cache/huggingface \
-    # Giới hạn số thread torch/OpenMP dùng cho mỗi request encode — tránh 1 process
-    # torch chiếm hết 6 vCPU và làm đói MySQL/Redis chạy chung trên cùng VPS.
-    OMP_NUM_THREADS=3 \
-    TORCH_NUM_THREADS=3 \
+    # Giới hạn số thread torch/OpenMP dùng cho mỗi request encode — khớp với deploy.resources.
+    # limits.cpus=1.0 của service app trong docker-compose.yml (VPS chỉ 2 vCPU thật, dùng chung
+    # với 1 stack production khác); đặt cao hơn CPU quota chỉ tốn thêm overhead context-switch.
+    OMP_NUM_THREADS=1 \
+    TORCH_NUM_THREADS=1 \
     TOKENIZERS_PARALLELISM=false
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
