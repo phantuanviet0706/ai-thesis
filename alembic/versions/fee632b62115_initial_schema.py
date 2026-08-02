@@ -25,8 +25,8 @@ def upgrade() -> None:
     sa.Column('logo_url', sa.String(length=500), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('is_active', sa.Boolean(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index('idx_brand_active', 'Brands', ['is_active'], unique=False)
@@ -38,7 +38,7 @@ def upgrade() -> None:
     sa.Column('name', sa.String(length=100), nullable=False),
     sa.Column('slug', sa.String(length=100), nullable=False),
     sa.Column('tag_type', sa.String(length=50), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('name'),
     sa.UniqueConstraint('slug')
@@ -53,8 +53,8 @@ def upgrade() -> None:
     sa.Column('parent_id', sa.BigInteger(), nullable=True),
     sa.Column('depth_level', sa.Integer(), nullable=False),
     sa.Column('is_active', sa.Boolean(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['parent_id'], ['Categories.id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -74,8 +74,8 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('is_verified', sa.Boolean(), nullable=True),
     sa.Column('last_login_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('phone')
@@ -96,7 +96,7 @@ def upgrade() -> None:
     sa.Column('new_value', sa.JSON(), nullable=True),
     sa.Column('ip_address', sa.String(length=45), nullable=True),
     sa.Column('user_agent', sa.String(length=500), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index('idx_audit_action', 'AuditLogs', ['action'], unique=False)
@@ -119,8 +119,8 @@ def upgrade() -> None:
     sa.Column('attributes', sa.JSON(), nullable=True),
     sa.Column('status', sa.String(length=50), nullable=False),
     sa.Column('embedding_status', sa.String(length=50), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['brand_id'], ['Brands.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['category_id'], ['Categories.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id'),
@@ -149,8 +149,8 @@ def upgrade() -> None:
     sa.Column('loyalty_points', sa.Integer(), nullable=False),
     sa.Column('customer_segment', sa.String(length=50), nullable=True),
     sa.Column('staff_notes', sa.Text(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['Users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('user_id')
@@ -171,7 +171,7 @@ def upgrade() -> None:
     sa.Column('district', sa.String(length=100), nullable=True),
     sa.Column('province', sa.String(length=100), nullable=False),
     sa.Column('is_default', sa.Boolean(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['Users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -182,8 +182,8 @@ def upgrade() -> None:
     sa.Column('user_id', sa.BigInteger(), nullable=True),
     sa.Column('session_key', sa.String(length=255), nullable=True),
     sa.Column('expires_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['user_id'], ['Users.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -237,7 +237,7 @@ def upgrade() -> None:
     sa.Column('is_active', sa.Boolean(), nullable=True),
     sa.Column('last_used_at', sa.DateTime(), nullable=True),
     sa.Column('expires_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['owner_user_id'], ['Users.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -253,8 +253,8 @@ def upgrade() -> None:
     sa.Column('description', sa.String(length=500), nullable=True),
     sa.Column('is_sensitive', sa.Boolean(), nullable=True),
     sa.Column('updated_by', sa.BigInteger(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['updated_by'], ['Users.id'], ondelete='SET NULL'),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('config_key')
@@ -267,7 +267,7 @@ def upgrade() -> None:
     sa.Column('alt_text', sa.String(length=255), nullable=True),
     sa.Column('sort_order', sa.Integer(), nullable=False),
     sa.Column('is_primary', sa.Boolean(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['product_id'], ['Products.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -312,8 +312,8 @@ def upgrade() -> None:
     sa.Column('shipped_at', sa.DateTime(), nullable=True),
     sa.Column('delivered_at', sa.DateTime(), nullable=True),
     sa.Column('cancelled_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['conversation_session_id'], ['ConversationSessions.id'], ondelete='SET NULL'),
     sa.ForeignKeyConstraint(['shipping_address_id'], ['UserAddresses.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['Users.id'], ondelete='SET NULL'),
@@ -345,7 +345,7 @@ def upgrade() -> None:
     sa.Column('agent_name', sa.String(length=50), nullable=True),
     sa.Column('latency_ms', sa.Integer(), nullable=True),
     sa.Column('token_count', sa.Integer(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['session_id'], ['ConversationSessions.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -361,7 +361,7 @@ def upgrade() -> None:
     sa.Column('primary_concern', sa.String(length=255), nullable=True),
     sa.Column('consult_strategy', sa.String(length=500), nullable=True),
     sa.Column('raw_output', sa.JSON(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['session_id'], ['ConversationSessions.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -378,7 +378,7 @@ def upgrade() -> None:
     sa.Column('retrieval_score', sa.DECIMAL(precision=5, scale=4), nullable=True),
     sa.Column('retrieved_product_ids', sa.JSON(), nullable=True),
     sa.Column('error_message', sa.String(length=500), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['session_id'], ['ConversationSessions.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -394,7 +394,7 @@ def upgrade() -> None:
     sa.Column('unit_price', sa.DECIMAL(precision=10, scale=2), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),
     sa.Column('total_price', sa.DECIMAL(precision=15, scale=2), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['order_id'], ['Orders.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['product_id'], ['Products.id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id')
@@ -410,7 +410,7 @@ def upgrade() -> None:
     sa.Column('status', sa.String(length=50), nullable=False),
     sa.Column('gateway_response', sa.JSON(), nullable=True),
     sa.Column('paid_at', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['order_id'], ['Orders.id'], ondelete='RESTRICT'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -431,8 +431,8 @@ def upgrade() -> None:
     sa.Column('is_published', sa.Boolean(), nullable=True),
     sa.Column('moderated_at', sa.DateTime(), nullable=True),
     sa.Column('embedding_status', sa.String(length=50), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('created_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['order_item_id'], ['OrderItems.id'], ),
     sa.ForeignKeyConstraint(['product_id'], ['Products.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['user_id'], ['Users.id'], ondelete='SET NULL'),

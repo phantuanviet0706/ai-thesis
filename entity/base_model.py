@@ -6,13 +6,19 @@ from sqlalchemy.sql import func
 Base = declarative_base()
 
 class TimestampMixin:
+    # server_default bắt buộc — default= của SQLAlchemy chỉ áp dụng khi insert qua ORM, không
+    # có tác dụng với raw SQL (vd resources/migrate/seed.sql) → MySQL strict mode từ chối insert
+    # thiếu giá trị cho cột NOT NULL không có default ở tầng DB. Giữ cả default= để ORM insert
+    # vẫn nhận giá trị nhất quán ngay trong Python object trước khi flush.
     created_at = Column(
         DateTime,
+        server_default=func.now(),
         default=func.now(),
         nullable=False
     )
     updated_at = Column(
         DateTime,
+        server_default=func.now(),
         default=func.now(),
         onupdate=func.now(),
         nullable=False
