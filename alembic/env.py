@@ -2,7 +2,7 @@ from logging.config import fileConfig
 from urllib.parse import quote_plus
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
+from sqlalchemy import create_engine, pool
 
 from core.config import settings
 import entity  # noqa: F401 — populates entity.base_model.Base.metadata for autogenerate
@@ -21,7 +21,10 @@ DATABASE_URL = (
     f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
     f"?charset=utf8mb4"
 )
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+# KHÔNG dùng config.set_main_option("sqlalchemy.url", DATABASE_URL) — ConfigParser coi "%"
+# là ký tự interpolation (%(name)s), nên URL đã quote_plus (chứa vd "%40") làm nó ném
+# ValueError "invalid interpolation syntax". Engine được tạo trực tiếp từ DATABASE_URL trong
+# run_migrations_online()/run_migrations_offline() bên dưới, không đi qua configparser.
 
 
 def run_migrations_offline() -> None:
@@ -39,11 +42,7 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Connect to MySQL and apply migrations directly — the normal path (`alembic upgrade head`)."""
-    connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_engine(DATABASE_URL, poolclass=pool.NullPool)
 
     with connectable.connect() as connection:
         context.configure(
