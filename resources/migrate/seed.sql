@@ -9,6 +9,34 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+-- Idempotent: xoá sạch dữ liệu cũ trước khi seed — cho phép chạy lại file này nhiều lần (vd
+-- sau khi 1 lần seed fail giữa chừng do lỗi dữ liệu) mà không cần DROP DATABASE + chạy lại
+-- alembic upgrade head. An toàn TRUNCATE bất kể thứ tự phụ thuộc FK vì FOREIGN_KEY_CHECKS đã
+-- tắt ở trên; TRUNCATE (không phải DELETE) để reset luôn AUTO_INCREMENT về đúng giá trị ban
+-- đầu, khớp với các id cố định (1, 2, 3...) được insert cứng bên dưới.
+TRUNCATE TABLE Brands;
+TRUNCATE TABLE Tags;
+TRUNCATE TABLE Categories;
+TRUNCATE TABLE Products;
+TRUNCATE TABLE ProductImages;
+TRUNCATE TABLE ProductTags;
+TRUNCATE TABLE Users;
+TRUNCATE TABLE UserProfiles;
+TRUNCATE TABLE UserAddresses;
+TRUNCATE TABLE Carts;
+TRUNCATE TABLE CartItems;
+TRUNCATE TABLE ConversationSessions;
+TRUNCATE TABLE Orders;
+TRUNCATE TABLE OrderItems;
+TRUNCATE TABLE Payments;
+TRUNCATE TABLE ProductReviews;
+TRUNCATE TABLE ConversationMessages;
+TRUNCATE TABLE PsychStateLogs;
+TRUNCATE TABLE AgentPerformanceLogs;
+TRUNCATE TABLE APIKeys;
+TRUNCATE TABLE SystemConfigs;
+TRUNCATE TABLE AuditLogs;
+
 -- ============================================================
 -- [1] Brands
 -- ============================================================
