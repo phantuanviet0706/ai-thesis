@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+from urllib.parse import quote_plus
 
 from alembic import context
 from sqlalchemy import engine_from_config, pool
@@ -14,8 +15,9 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
+# quote_plus bắt buộc — xem ghi chú trong database/__init__.py::DATABASE_URL
 DATABASE_URL = (
-    f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}"
+    f"mysql+pymysql://{quote_plus(settings.DB_USER)}:{quote_plus(settings.DB_PASSWORD)}"
     f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
     f"?charset=utf8mb4"
 )

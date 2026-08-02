@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 from core.logger import custom_logger
 from typing import Any, Dict, List
+from urllib.parse import quote_plus
 
 from pydantic_settings import BaseSettings
 from sqlalchemy import create_engine
@@ -23,7 +24,10 @@ class DatabaseSettings(BaseSettings):
         @desc Tạo chuỗi kết nối URL cho cơ sở dữ liệu dựa trên các thông số cấu hình
         @return str: Chuỗi URL kết nối theo định dạng SQLAlchemy
         """
-        return f"{self.db_type}://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+        # quote_plus bắt buộc — xem ghi chú trong database/__init__.py::DATABASE_URL
+        user = quote_plus(self.db_user)
+        password = quote_plus(self.db_password)
+        return f"{self.db_type}://{user}:{password}@{self.db_host}:{self.db_port}/{self.db_name}"
 
 
 class DBManager:

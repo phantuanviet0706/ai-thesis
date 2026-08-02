@@ -80,9 +80,10 @@ def test_sqlalchemy_engine():
     header("── Test 2: Kết nối qua SQLAlchemy engine ──")
     try:
         from sqlalchemy import create_engine, text
+        from urllib.parse import quote_plus
 
         url = (
-            f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}"
+            f"mysql+pymysql://{quote_plus(settings.DB_USER)}:{quote_plus(settings.DB_PASSWORD)}"
             f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
             f"?charset=utf8mb4"
         )

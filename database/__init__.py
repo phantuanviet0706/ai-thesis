@@ -1,6 +1,7 @@
 import asyncio
 from contextlib import contextmanager
 from typing import Any, Generator, TypeVar
+from urllib.parse import quote_plus
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -15,8 +16,10 @@ T = TypeVar("T")
 #   1205 = Lock wait timeout exceeded
 _TRANSIENT_LOCK_ERRNOS = (1213, 1205)
 
+# quote_plus bắt buộc — user/password chứa ký tự đặc biệt (vd "abc@123") sẽ phá vỡ URL nếu
+# ghép thô: "@" thứ 2 bị hiểu nhầm thành phần phân cách userinfo/host, kết nối sai host/port.
 DATABASE_URL = (
-    f"mysql+pymysql://{settings.DB_USER}:{settings.DB_PASSWORD}"
+    f"mysql+pymysql://{quote_plus(settings.DB_USER)}:{quote_plus(settings.DB_PASSWORD)}"
     f"@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
     f"?charset=utf8mb4"
 )
