@@ -17,7 +17,7 @@ class OrderItem(Base):
     unit_price = Column(DECIMAL(10, 2), nullable=False)
     quantity = Column(Integer, default=1, nullable=False)
     total_price = Column(DECIMAL(15, 2), nullable=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
     
     __table_args__ = (
         Index('idx_item_order', 'order_id'),

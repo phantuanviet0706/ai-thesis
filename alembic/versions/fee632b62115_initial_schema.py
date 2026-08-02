@@ -204,8 +204,8 @@ def upgrade() -> None:
     sa.Column('iteration_count', sa.Integer(), nullable=False),
     sa.Column('conversion_outcome', sa.String(length=50), nullable=False),
     sa.Column('linked_order_id', sa.BigInteger(), nullable=True),
-    sa.Column('started_at', sa.DateTime(), nullable=False),
-    sa.Column('last_active_at', sa.DateTime(), nullable=False),
+    sa.Column('started_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
+    sa.Column('last_active_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.Column('ended_at', sa.DateTime(), nullable=True),
     # linked_order_id -> Orders.id KHÔNG khai báo inline ở đây — Orders và ConversationSessions
     # tham chiếu vòng tròn lẫn nhau (Orders.conversation_session_id -> ConversationSessions.id).
@@ -285,7 +285,7 @@ def upgrade() -> None:
     sa.Column('cart_id', sa.BigInteger(), nullable=False),
     sa.Column('product_id', sa.BigInteger(), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),
-    sa.Column('added_at', sa.DateTime(), nullable=False),
+    sa.Column('added_at', sa.DateTime(), server_default=sa.text('CURRENT_TIMESTAMP'), nullable=False),
     sa.ForeignKeyConstraint(['cart_id'], ['Carts.id'], ondelete='CASCADE'),
     sa.ForeignKeyConstraint(['product_id'], ['Products.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id'),

@@ -15,7 +15,7 @@ class ProductImage(Base):
     alt_text = Column(String(255))
     sort_order = Column(Integer, default=0, nullable=False)
     is_primary = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
 
 
     __table_args__ = (

@@ -19,7 +19,7 @@ class APIKey(Base, ActiveMixin):
     is_active = Column(Boolean, default=True, index=True)
     last_used_at = Column(DateTime)
     expires_at = Column(DateTime)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
 
     __table_args__ = (
         Index('idx_apikey_hash', 'key_hash'),

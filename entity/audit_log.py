@@ -18,7 +18,7 @@ class AuditLog(Base):
     new_value = Column(JSON)
     ip_address = Column(String(45))
     user_agent = Column(String(500))
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
 
     __table_args__ = (
         Index('idx_audit_actor', 'actor_id'),

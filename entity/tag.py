@@ -12,7 +12,7 @@ class Tag(Base):
     name = Column(String(100), nullable=False, unique=True)
     slug = Column(String(100), nullable=False, unique=True)
     tag_type = Column(String(50), nullable=False, index=True)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
 
     __table_args__ = (
         Index('idx_tag_type', 'tag_type'),

@@ -19,7 +19,7 @@ class AgentPerformanceLog(Base):
     retrieval_score = Column(DECIMAL(5, 4))
     retrieved_product_ids = Column(JSON)
     error_message = Column(String(500))
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
 
     __table_args__ = (
         Index('idx_perf_session', 'session_id'),

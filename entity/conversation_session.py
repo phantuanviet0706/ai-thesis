@@ -22,8 +22,8 @@ class ConversationSession(Base):
     conversion_outcome = Column(String(50), default='no_intent', nullable=False, index=True)  # no_intent, expressed_interest, added_to_cart, purchased
     linked_order_id = Column(BigInteger, ForeignKey('Orders.id', ondelete='SET NULL'))
 
-    started_at = Column(DateTime, default=func.now(), nullable=False)
-    last_active_at = Column(DateTime, default=func.now(), nullable=False, index=True)
+    started_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
+    last_active_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False, index=True)
     ended_at = Column(DateTime)
 
     __table_args__ = (

@@ -20,7 +20,7 @@ class UserAddress(Base):
     district = Column(String(100))
     province = Column(String(100), nullable=False)
     is_default = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
 
     __table_args__ = (
         Index('idx_address_user', 'user_id'),

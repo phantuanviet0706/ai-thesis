@@ -17,7 +17,7 @@ class PsychStateLog(Base):
     primary_concern = Column(String(255))
     consult_strategy = Column(String(500))
     raw_output = Column(JSON)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
 
     __table_args__ = (
         Index('idx_psych_session', 'session_id'),

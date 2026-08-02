@@ -17,7 +17,7 @@ class Payment(Base):
     status = Column(String(50), default='pending', nullable=False, index=True)  # pending, success, failed, refunded
     gateway_response = Column(JSON)
     paid_at = Column(DateTime)
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
 
     __table_args__ = (
         Index('idx_payment_order', 'order_id'),

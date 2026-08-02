@@ -18,7 +18,7 @@ class ConversationMessage(Base):
     latency_ms = Column(Integer)
     token_count = Column(Integer)
 
-    created_at = Column(DateTime, default=func.now(), nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), default=func.now(), nullable=False)
     
     __table_args__ = (
         Index('idx_msg_session', 'session_id'),
